@@ -1,0 +1,11 @@
+# Sample Commands
+
+
+Test Posting license plate
+    curl -H "Content-Type: application/json" -X POST http://127.0.0.1:8000/updateVehicleInfo -d '{"license_plate":"jjn4759"}'
+
+Test signup post request
+    curl -H "Content-Type: application/json" -X POST http://127.0.0.1:8000/accounts/signup -d @utils/sample_signup.json
+
+Test login post request
+    curl -H "Content-Type: application/json" -X POST http://127.0.0.1:8000/accounts/login -d @utils/sample_login.json
