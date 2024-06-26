@@ -1,5 +1,6 @@
 import get_ticket_status
 from fastapi import FastAPI, Response, status
+from fastapi.middleware.cors import CORSMiddleware
 import sqlite3
 import uuid
 
@@ -7,6 +8,17 @@ import uuid
 from custom_types import LicensePlate, UserCredentials, LoginInfo, Vehicle
 
 app = FastAPI()
+
+origins = ["*"]
+
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=origins,
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
+
 session = {"authenticated": False, "user_id": None}
 # Establish a requests session for web scraping
 
@@ -14,6 +26,7 @@ session = {"authenticated": False, "user_id": None}
 #### Establish routes ####
 @app.post("/accounts/signup")
 def signup(user_creds: UserCredentials, response: Response):
+    response.headers["Access-Control-Request-Headers"] = "Content-Type, Authorization"
     con = sqlite3.connect("master.db")
     message = "User successfully created, please sign in."
     params = (

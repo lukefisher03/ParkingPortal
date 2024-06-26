@@ -1,0 +1,51 @@
+body, html {
+    background: rgb(255, 255, 255);
+    font-family:"Roboto"
+}
+#signup-modal {
+    display:block;
+    text-align: center;
+    width:25%;
+    margin:50px auto;
+    padding:50px 30px;
+    border-radius: 15px;
+    border:0.5px solid rgb(185, 185, 185);
+    background: white;
+}
+
+#signup-modal p {
+    font-size: 0.7em;
+}
+
+#signup-modal h1 {
+    font-family: "Roboto";
+    margin-top:20px;
+    font-weight: bold;
+}
+
+.text-input {
+    width:70%;
+    border:0.5px solid rgb(195, 195, 195);
+    outline:none;
+    padding:10px;
+    margin:10px 0px;
+    border-radius: 2px;
+}
+
+.form-button {
+    font-weight: bold;
+    display:block;
+    color:white;
+    padding:10px 50px;
+    border:none;
+    outline:none;
+    border-radius: 5px;
+    background-color: rgb(0, 0, 0);
+    margin:0 auto;
+    cursor:pointer;
+}
+
+#login-redirect {
+    margin-top:30px;
+    margin-bottom: 20px;
+}
