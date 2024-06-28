@@ -7,11 +7,11 @@ class UserCredentials(BaseModel):
     name: str
     phone_number: str
     email: str
-    password_hash: str
+    password: str
 
 class LoginInfo(BaseModel):
     email: str
-    password_hash: str
+    password: str
 
 class Vehicle(BaseModel):
     nickname: str

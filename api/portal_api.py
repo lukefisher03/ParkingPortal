@@ -34,7 +34,7 @@ def signup(user_creds: UserCredentials, response: Response):
         user_creds.name,
         user_creds.phone_number,
         user_creds.email,
-        user_creds.password_hash,
+        user_creds.password,
     )
 
     try:
@@ -56,10 +56,10 @@ def login(login_info: LoginInfo, response: Response):
     message = "Login success"
 
     stored_hash, user_id = cur.execute(
-        "SELECT password_hash, id FROM users WHERE email=?", (login_info.email,)
+        "SELECT password, id FROM users WHERE email=?", (login_info.email,)
     ).fetchone()
 
-    if stored_hash == login_info.password_hash:
+    if stored_hash == login_info.password:
         session["user_id"] = user_id
         session["authenticated"] = True
         response.status_code = status.HTTP_200_OK

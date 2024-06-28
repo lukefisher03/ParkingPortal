@@ -1,19 +1,18 @@
-#signup-modal {
+.account-modal {
   display:block;
   text-align: center;
   width:25%;
   margin:50px auto;
   padding:50px 30px;
-  border-radius: 15px;
-  border:0.5px solid rgb(185, 185, 185);
+  border:0.5px solid rgb(215, 215, 215);
   background: white;
 }
 
-#signup-modal p {
+.account-modal p {
   font-size: 0.7em;
 }
 
-#signup-modal h1 {
+.account-modal h1 {
   font-family: "Roboto";
   margin-top:20px;
   font-weight: bold;
@@ -41,7 +40,12 @@
   cursor:pointer;
 }
 
-#login-redirect {
+.login-redirect {
   margin-top:30px;
   margin-bottom: 20px;
+}
+
+.signup-errors {
+  white-space: pre-wrap;
+  color:rgb(255, 43, 43);
 }
