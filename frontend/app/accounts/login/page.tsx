@@ -2,28 +2,26 @@
 
 import { Dispatch, SetStateAction, useState } from "react";
 import styles from "../layout.module.css";
-import { SignupInfo, validateSignupInfo, postSignupInfo } from "./script";
+import { LoginInfo, validateLoginInfo, postLoginInfo } from "./script";
 import Link from "next/link";
 
 const SubmitButton = (props: {
-  signupInfo: SignupInfo;
+  loginInfo: LoginInfo;
   errorSetter: Dispatch<SetStateAction<string>>;
 }) => {
   async function handleSubmit(event: React.MouseEvent) {
     event.preventDefault();
 
-    // remove any non number characters from the phone number
-    props.signupInfo.phone_number = props.signupInfo.phone_number.replace(
-      /\D/g,
-      ""
-    );
+    const errors = validateLoginInfo(props.loginInfo);
+    props.errorSetter("");
 
-    const errors = validateSignupInfo(props.signupInfo);
 
     if (!errors) {
-      const serverError = await postSignupInfo(props.signupInfo);
+      const serverError = await postLoginInfo(props.loginInfo);
       if (serverError) {
         props.errorSetter(serverError);
+      } else {
+        console.log("Successfully authenticated")
       }
     } else {
       props.errorSetter(errors);
@@ -35,19 +33,17 @@ const SubmitButton = (props: {
       className={styles["form-button"]}
       id="submit-button"
       type="button"
-      value="Sign Up"
+      value="Login"
       onClick={handleSubmit}
     />
   );
 };
 
-export default function SignupModal() {
-  const [formInput, setFormInput] = useState<SignupInfo>({
+export default function LoginModal() {
+  const [formInput, setFormInput] = useState<LoginInfo>({
     // initalize empty object
     email: "",
-    phone_number: "",
     password: "",
-    name: "",
   });
 
   const [errors, setErrors] = useState<string>("");
@@ -55,28 +51,7 @@ export default function SignupModal() {
   return (
     <section className={styles["account-modal"]}>
       <form id="form">
-        <h1>Create your account</h1>
-        <input
-          className={styles["text-input"]}
-          type="text"
-          name="name"
-          placeholder="Name"
-          onChange={(e) =>
-            setFormInput({ ...formInput, name: e.target.value.toString() })
-          }
-        />
-        <input
-          className={styles["text-input"]}
-          type="text"
-          name="phone-number"
-          placeholder="Phone Number"
-          onChange={(e) =>
-            setFormInput({
-              ...formInput,
-              phone_number: e.target.value.toString(),
-            })
-          }
-        />
+        <h1>Parking Portal</h1>
         <input
           className={styles["text-input"]}
           type="text"
@@ -98,11 +73,11 @@ export default function SignupModal() {
             })
           }
         />
-        <p className={styles["signup-errors"]}>{errors}</p>
-        <p className={styles["login-redirect"]}>
-          Already have an account? <Link href="login">Login</Link>
+        <p className={styles["errors"]}>{errors}</p>
+        <p className={styles["redirect"]}>
+          Don't have an account? <Link href="signup">Sign up</Link>
         </p>
-        <SubmitButton signupInfo={formInput} errorSetter={setErrors} />
+        <SubmitButton loginInfo={formInput} errorSetter={setErrors} />
       </form>
     </section>
   );

@@ -26,9 +26,8 @@ session = {"authenticated": False, "user_id": None}
 #### Establish routes ####
 @app.post("/accounts/signup")
 def signup(user_creds: UserCredentials, response: Response):
-    response.headers["Access-Control-Request-Headers"] = "Content-Type, Authorization"
+    server_response = {}
     con = sqlite3.connect("master.db")
-    message = "User successfully created, please sign in."
     params = (
         str(uuid.uuid4()),
         user_creds.name,
@@ -41,19 +40,27 @@ def signup(user_creds: UserCredentials, response: Response):
         with con:
             con.execute("INSERT INTO users VALUES (?,?,?,?,?)", params)
             response.status_code = status.HTTP_200_OK
+
+            server_response["authenticated"] = True
+            server_response["error"] = None
+    except sqlite3.IntegrityError as e:
+        response.status_code = status.HTTP_400_BAD_REQUEST
+        server_response["authenticated"] = False
+        server_response["error"] = "Email or phone number already registered, try logging in"
     except Exception as e:
         response.status_code = status.HTTP_400_BAD_REQUEST
-        message = "User could not be created."
+        server_response["authenticated"] = False
+        server_response["error"] = "User could not be created."
 
     con.close()
-    return message
+    return server_response
 
 
 @app.post("/accounts/login")
 def login(login_info: LoginInfo, response: Response):
     con = sqlite3.connect("master.db")
     cur = con.cursor()
-    message = "Login success"
+    server_response = {}
 
     stored_hash, user_id = cur.execute(
         "SELECT password, id FROM users WHERE email=?", (login_info.email,)
@@ -62,12 +69,15 @@ def login(login_info: LoginInfo, response: Response):
     if stored_hash == login_info.password:
         session["user_id"] = user_id
         session["authenticated"] = True
+        server_response["authenticated"] = True
+        server_response["error"] = None
         response.status_code = status.HTTP_200_OK
     else:
-        message = "Login failed"
+        server_response["error"] = "Incorrect email or password, please try again"
+        server_response["authenticated"] = False
         response.status_code = status.HTTP_401_UNAUTHORIZED
 
-    return message
+    return server_response
 
 
 @app.post("/api/addVehicle")

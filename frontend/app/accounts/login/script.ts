@@ -1,18 +1,12 @@
 // Get form data
 
-export type SignupInfo = {
-    name: string,
-    email: string,
-    password: string,
-    phone_number:string
+export type LoginInfo = {
+  email: string,
+  password: string,
 }
 
-export const validateSignupInfo = (signupInfo: SignupInfo): string => {
+export const validateLoginInfo = (signupInfo: LoginInfo): string => {
   let errorMessage = ""
-
-  if (signupInfo["name"] == "" || !signupInfo) {
-    errorMessage += "Name cannot be blank\n"
-  }
 
   if (!validateEmail(signupInfo["email"])) {
     errorMessage += "Email is invalid\n"
@@ -20,10 +14,6 @@ export const validateSignupInfo = (signupInfo: SignupInfo): string => {
 
   if (signupInfo["password"].length < 8) {
     errorMessage += "Password must be at least 8 characters\n"
-  }
-
-  if (signupInfo["phone_number"].length < 10) {
-    errorMessage += "Phone number must be at least 10 digits\n"
   }
 
   return errorMessage
@@ -37,9 +27,9 @@ const validateEmail = (email: string) => {
     )
 }
 
-export const postSignupInfo = async (body: SignupInfo):Promise<string> => {
+export const postLoginInfo = async (body: LoginInfo):Promise<string> => {
 
-  const apiUrl = "http://127.0.0.1:8000/accounts/signup"
+  const apiUrl = "http://127.0.0.1:8000/accounts/login"
   let errorMessage = ""
 
   const requestOptions = {
