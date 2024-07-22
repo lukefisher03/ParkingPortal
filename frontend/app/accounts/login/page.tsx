@@ -1,31 +1,38 @@
-"use client";
+"use client"
 
-import { Dispatch, SetStateAction, useState } from "react";
-import styles from "../layout.module.css";
-import { LoginInfo, validateLoginInfo, postLoginInfo } from "./script";
-import Link from "next/link";
+import { Dispatch, SetStateAction, useContext, useEffect, useState } from "react"
+import styles from "../layout.module.css"
+import { LoginInfo, validateLoginInfo, postLoginInfo } from "./script"
+import Link from "next/link"
+import { useRouter } from "next/navigation"
+
 
 const SubmitButton = (props: {
-  loginInfo: LoginInfo;
-  errorSetter: Dispatch<SetStateAction<string>>;
+  loginInfo: LoginInfo
+  errorSetter: Dispatch<SetStateAction<string>>
 }) => {
+  const router = useRouter()
+
   async function handleSubmit(event: React.MouseEvent) {
-    event.preventDefault();
+    event.preventDefault()
 
-    const errors = validateLoginInfo(props.loginInfo);
-    props.errorSetter("");
-
+    const errors = validateLoginInfo(props.loginInfo)
+    props.errorSetter("")
 
     if (!errors) {
-      const serverError = await postLoginInfo(props.loginInfo);
-      if (serverError) {
-        props.errorSetter(serverError);
+      const serverError = await postLoginInfo(props.loginInfo)
+      if (serverError.error) {
+        props.errorSetter(serverError.response_message)
       } else {
+        localStorage.setItem("userId", serverError.response_message)
         console.log("Successfully authenticated")
+        // router.push("/dashboard")
+        
       }
     } else {
-      props.errorSetter(errors);
+      props.errorSetter(errors)
     }
+
   }
 
   return (
@@ -36,17 +43,17 @@ const SubmitButton = (props: {
       value="Login"
       onClick={handleSubmit}
     />
-  );
-};
+  )
+}
 
 export default function LoginModal() {
   const [formInput, setFormInput] = useState<LoginInfo>({
     // initalize empty object
     email: "",
     password: "",
-  });
+  })
 
-  const [errors, setErrors] = useState<string>("");
+  const [errors, setErrors] = useState<string>("")
 
   return (
     <section className={styles["account-modal"]}>
@@ -80,5 +87,5 @@ export default function LoginModal() {
         <SubmitButton loginInfo={formInput} errorSetter={setErrors} />
       </form>
     </section>
-  );
+  )
 }

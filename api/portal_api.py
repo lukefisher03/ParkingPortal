@@ -70,10 +70,12 @@ def login(login_info: LoginInfo, response: Response):
         session["user_id"] = user_id
         session["authenticated"] = True
         server_response["authenticated"] = True
+        server_response["userId"] = user_id
         server_response["error"] = None
         response.status_code = status.HTTP_200_OK
     else:
         server_response["error"] = "Incorrect email or password, please try again"
+        server_response["userId"] = None
         server_response["authenticated"] = False
         response.status_code = status.HTTP_401_UNAUTHORIZED
 
@@ -88,15 +90,71 @@ def add_vehicle(vehicle: Vehicle, response: Response):
 
     con = sqlite3.connect("master.db")
 
-    params = (session["user_id"], str(uuid.uuid4()), vehicle.nickname, vehicle.plate)
+    params = (session["user_id"], str(uuid.uuid4()), vehicle.nickname, vehicle.plate.upper())
 
     try:
         with con:
             con.execute("INSERT INTO vehicles VALUES(?, ?, ?, ?)", params)
+            return "Vehicle successfully added"
     except sqlite3.IntegrityError as e:
         response.status_code = status.HTTP_403_FORBIDDEN
         return f"Exception:\n {e}"
+    
+@app.get("/api/getUser/{id}")
+def getUser(id: str, response: Response):
+    con = sqlite3.connect("master.db")
 
+    cur = con.execute(
+        "SELECT id, name, email, phone_number FROM users WHERE id=?", (id,)
+    )
+
+    return {k:v for (k,v) in zip([x[0] for x in cur.description], cur.fetchone())}
+
+@app.get("/api/getCitations/{plate}")
+def getCitations(plate: str, response: Response):
+    con = sqlite3.connect("master.db")
+
+    d = []
+
+    cur = con.execute(
+        "SELECT * FROM citations WHERE plate=?", (plate,)
+    )
+    citationRows = cur.fetchall()
+    d.append([{k:v for (k,v) in zip([x[0] for x in cur.description], citation)} for citation in citationRows]) # i know, i know...
+    con.close()
+    return d
+
+@app.get("/api/getVehicles/{userId}")
+def getVehicles(userId: str, response: Response):
+    con = sqlite3.connect("master.db")
+
+    vehicleList = []
+    
+    with con:
+        vehicleRows = con.execute(
+            "SELECT * FROM vehicles WHERE owner_id=?", (userId,)
+        )
+        for vehicleData in vehicleRows.fetchall():
+            vehicle = {}
+            for t, v in zip([x[0] for x in vehicleRows.description], vehicleData):
+                vehicle[t] = v
+            vehicleList.append(vehicle)
+    return vehicleList
+
+
+@app.get("/api/getVehicle/{plate}")
+def getVehicles(plate: str, response: Response):
+    con = sqlite3.connect("master.db")
+
+    vehicleList = []
+    
+    with con:
+        vehicleRow = con.execute(
+            "SELECT * FROM vehicles WHERE plate=?", (plate,)
+        )
+
+        vehicle = {k:v for (k,v) in zip([x[0] for x in vehicleRow.description], vehicleRow.fetchone())}
+    return vehicle
 
 @app.post("/api/updateVehicleInfo")
 def update_plate_info(license_plate: LicensePlate, response: Response):

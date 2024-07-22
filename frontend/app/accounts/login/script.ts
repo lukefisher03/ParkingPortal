@@ -27,10 +27,11 @@ const validateEmail = (email: string) => {
     )
 }
 
-export const postLoginInfo = async (body: LoginInfo):Promise<string> => {
+export const postLoginInfo = async (body: LoginInfo):Promise<{error: boolean, response_message: string}> => {
 
   const apiUrl = "http://127.0.0.1:8000/accounts/login"
-  let errorMessage = ""
+  let error = false
+  let response_message = ""
 
   const requestOptions = {
     method: "POST",
@@ -43,6 +44,12 @@ export const postLoginInfo = async (body: LoginInfo):Promise<string> => {
   const response = await fetch(apiUrl, requestOptions)
   const jsonResponse = await response.json()
   
-  errorMessage = jsonResponse["error"]
-  return errorMessage
+  if (jsonResponse["error"]) {
+    response_message = jsonResponse["error"]
+    error = true
+  } else {
+    response_message = jsonResponse["userId"]
+  }
+  
+  return {error: error, response_message: response_message}
 }

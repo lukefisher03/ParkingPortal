@@ -1,33 +1,36 @@
-"use client";
+"use client"
 
-import { Dispatch, SetStateAction, useState } from "react";
-import styles from "../layout.module.css";
-import { SignupInfo, validateSignupInfo, postSignupInfo } from "./script";
-import Link from "next/link";
+import { Dispatch, SetStateAction, useState } from "react"
+import styles from "../layout.module.css"
+import { SignupInfo, validateSignupInfo, postSignupInfo } from "./script"
+import Link from "next/link"
+import { redirect } from "next/navigation"
 
 const SubmitButton = (props: {
-  signupInfo: SignupInfo;
-  errorSetter: Dispatch<SetStateAction<string>>;
+  signupInfo: SignupInfo
+  errorSetter: Dispatch<SetStateAction<string>>
 }) => {
   async function handleSubmit(event: React.MouseEvent) {
-    event.preventDefault();
+    event.preventDefault()
 
     // remove any non number characters from the phone number
     props.signupInfo.phone_number = props.signupInfo.phone_number.replace(
       /\D/g,
       ""
-    );
+    )
 
-    const errors = validateSignupInfo(props.signupInfo);
+    const errors = validateSignupInfo(props.signupInfo)
 
     if (!errors) {
-      const serverError = await postSignupInfo(props.signupInfo);
+      const serverError = await postSignupInfo(props.signupInfo)
       if (serverError) {
-        props.errorSetter(serverError);
+        props.errorSetter(serverError)
       }
     } else {
-      props.errorSetter(errors);
+      props.errorSetter(errors)
     }
+
+    redirect("login")
   }
 
   return (
@@ -38,8 +41,8 @@ const SubmitButton = (props: {
       value="Sign Up"
       onClick={handleSubmit}
     />
-  );
-};
+  )
+}
 
 export default function SignupModal() {
   const [formInput, setFormInput] = useState<SignupInfo>({
@@ -48,9 +51,9 @@ export default function SignupModal() {
     phone_number: "",
     password: "",
     name: "",
-  });
+  })
 
-  const [errors, setErrors] = useState<string>("");
+  const [errors, setErrors] = useState<string>("")
 
   return (
     <section className={styles["account-modal"]}>
@@ -105,5 +108,5 @@ export default function SignupModal() {
         <SubmitButton signupInfo={formInput} errorSetter={setErrors} />
       </form>
     </section>
-  );
+  )
 }
