@@ -1,5 +1,66 @@
 body, html {
-  background: rgb(250, 250, 250);
+  background: rgb(243, 243, 243);
   font-family:"Roboto";
   width:100%;
+  padding:0;
+  margin:0;
+}
+
+nav {
+  background:white;
+  width:100%;
+  margin:0;
+  font-weight: bold;
+}
+nav ul {
+  margin:0;
+  display:flex;
+  justify-content: flex-end;
+  padding:0 50px;
+}
+
+nav ul li {
+  padding:15px 30px;
+  display:inline-block;
+}
+
+.vehicle-card-wrapper {
+  border:1px solid black;
+  margin:10px;
+  border-radius: 5px;
+}
+
+.vehicle-card-container {
+  display:flex;
+  padding:100px;
+}
+.vehicle-card {
+  margin:50px;
+  padding:10px;
+}
+
+.vehicle-card h6 {
+  margin: 0;
+}
+
+.vehicle-card p {
+  font-size: 0.7em;
+  margin:1px;
+}
+
+.vehicle-card-wrapper .button-row ul {
+  display: flex;
+  justify-content:space-evenly;
+  padding:0;
+}
+
+.vehicle-card-wrapper .button-row ul li {
+  display:inline-block;
+  margin:5px;
+  transition-duration: 0.3s;
+}
+
+.vehicle-card-wrapper .button-row ul li:hover {
+  color:red;
+  cursor:pointer;
 }

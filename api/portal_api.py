@@ -114,13 +114,11 @@ def getUser(id: str, response: Response):
 def getCitations(plate: str, response: Response):
     con = sqlite3.connect("master.db")
 
-    d = []
-
     cur = con.execute(
         "SELECT * FROM citations WHERE plate=?", (plate,)
     )
     citationRows = cur.fetchall()
-    d.append([{k:v for (k,v) in zip([x[0] for x in cur.description], citation)} for citation in citationRows]) # i know, i know...
+    d = [{k:v for (k,v) in zip([x[0] for x in cur.description], citation)} for citation in citationRows] # i know, i know...
     con.close()
     return d
 
