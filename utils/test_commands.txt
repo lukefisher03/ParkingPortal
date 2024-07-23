@@ -1,7 +1,7 @@
 # Sample Commands
 
 Test adding vehicle
-    curl -H "Content-Type: application/json" -X POST http://127.0.0.1:8000/api/addVehicle -d '{"plate":"jjn4759", "nickname":"Luke's Malibu"}'
+    curl -H "Content-Type: application/json" -X POST http://127.0.0.1:8000/api/addVehicle -d '{"plate":"jjn4759", "nickname":"Lukes Malibu"}'
 
 Test posting license plate
     curl -H "Content-Type: application/json" -X POST http://127.0.0.1:8000/updateVehicleInfo -d '{"license_plate":"jjn4759"}'

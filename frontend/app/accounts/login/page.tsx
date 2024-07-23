@@ -22,11 +22,11 @@ const SubmitButton = (props: {
     if (!errors) {
       const serverError = await postLoginInfo(props.loginInfo)
       if (serverError.error) {
-        props.errorSetter(serverError.response_message)
+        props.errorSetter(serverError.responseMessage)
       } else {
-        localStorage.setItem("userId", serverError.response_message)
+        localStorage.setItem("userId", serverError.responseMessage)
         console.log("Successfully authenticated")
-        // router.push("/dashboard")
+        router.push("/dashboard")
         
       }
     } else {

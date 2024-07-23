@@ -16,3 +16,4 @@ class LoginInfo(BaseModel):
 class Vehicle(BaseModel):
     nickname: str
     plate: str
+    kind: str

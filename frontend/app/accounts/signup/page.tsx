@@ -4,12 +4,14 @@ import { Dispatch, SetStateAction, useState } from "react"
 import styles from "../layout.module.css"
 import { SignupInfo, validateSignupInfo, postSignupInfo } from "./script"
 import Link from "next/link"
-import { redirect } from "next/navigation"
+import { useRouter } from "next/navigation"
 
 const SubmitButton = (props: {
   signupInfo: SignupInfo
   errorSetter: Dispatch<SetStateAction<string>>
 }) => {
+  const router = useRouter()
+  
   async function handleSubmit(event: React.MouseEvent) {
     event.preventDefault()
 
@@ -23,14 +25,15 @@ const SubmitButton = (props: {
 
     if (!errors) {
       const serverError = await postSignupInfo(props.signupInfo)
-      if (serverError) {
-        props.errorSetter(serverError)
+      if (serverError.error) {
+        props.errorSetter(serverError.responseMessage)
+      } else {
+        localStorage.setItem("userId", serverError.responseMessage)
+        router.push("/dashboard")
       }
     } else {
       props.errorSetter(errors)
     }
-
-    redirect("login")
   }
 
   return (

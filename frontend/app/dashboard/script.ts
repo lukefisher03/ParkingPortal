@@ -22,6 +22,7 @@ export type Vehicle = {
   ownerId: string,
   vehicleId: string,
   nickname: string,
+  kind: string
 
 }
 
@@ -67,7 +68,7 @@ export const getUserInfo = async (userId: string): Promise<User> => {
 
 
 export const getVehicle = async (plate: string): Promise<Vehicle> => {
-  const apiUrl = `http://127.0.0.1:8000/api/getVehicle/${plate}`
+  const apiUrl = `http://127.0.0.1:8000/api/getVehicle/${plate.toUpperCase()}`
   
   const requestOptions = {
     method: "GET",
@@ -84,6 +85,7 @@ export const getVehicle = async (plate: string): Promise<Vehicle> => {
     vehicleId: jsonResponse["vehicle_id"],
     plate: jsonResponse["plate"],
     nickname: jsonResponse["nickname"],
+    kind: jsonResponse["kind"]
   }
 
   return vehicle

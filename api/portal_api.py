@@ -19,6 +19,8 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
+VEHICLE_KINDS = ["suv", "sedan", "truck", "van"]
+
 session = {"authenticated": False, "user_id": None}
 # Establish a requests session for web scraping
 
@@ -43,6 +45,7 @@ def signup(user_creds: UserCredentials, response: Response):
 
             server_response["authenticated"] = True
             server_response["error"] = None
+            server_response["userId"] = params[0]
     except sqlite3.IntegrityError as e:
         response.status_code = status.HTTP_400_BAD_REQUEST
         server_response["authenticated"] = False
@@ -84,17 +87,21 @@ def login(login_info: LoginInfo, response: Response):
 
 @app.post("/api/addVehicle")
 def add_vehicle(vehicle: Vehicle, response: Response):
+    if (vehicle.kind not in VEHICLE_KINDS): 
+        response.status_code = status.HTTP_400_BAD_REQUEST
+        return "Bad request, vehicle type is not valid"
+
     if not session["authenticated"]:
         response.status_code = status.HTTP_401_UNAUTHORIZED
         return "Not Authorized!"
 
     con = sqlite3.connect("master.db")
 
-    params = (session["user_id"], str(uuid.uuid4()), vehicle.nickname, vehicle.plate.upper())
+    params = (session["user_id"], str(uuid.uuid4()), vehicle.nickname, vehicle.plate.upper(), vehicle.kind.lower())
 
     try:
         with con:
-            con.execute("INSERT INTO vehicles VALUES(?, ?, ?, ?)", params)
+            con.execute("INSERT INTO vehicles VALUES(?, ?, ?, ?, ?)", params)
             return "Vehicle successfully added"
     except sqlite3.IntegrityError as e:
         response.status_code = status.HTTP_403_FORBIDDEN
