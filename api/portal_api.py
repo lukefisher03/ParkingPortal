@@ -107,6 +107,26 @@ def add_vehicle(vehicle: Vehicle, response: Response):
         response.status_code = status.HTTP_403_FORBIDDEN
         return f"Exception:\n {e}"
     
+# @app.post("/api/removeVehicle")
+# def remove_vehicle(vehicle: Vehicle, response: Response):
+#     if not session["authenticated"]:
+#         response.status_code = status.HTTP_401_UNAUTHORIZED
+#         return "Not Authorized!"
+    
+#     con = sqlite3.connect("master.db")
+
+#     params = (session["user_id"], str(uuid.uuid4()), vehicle.nickname, vehicle.plate.upper(), vehicle.kind.lower())
+
+#     try:
+#         with con:
+#             con.execute("INSERT INTO vehicles VALUES(?, ?, ?, ?, ?)", params)
+#             return "Vehicle successfully added"
+#     except sqlite3.IntegrityError as e:
+#         response.status_code = status.HTTP_403_FORBIDDEN
+#         return f"Exception:\n {e}"
+    
+
+    
 @app.get("/api/getUser/{id}")
 def getUser(id: str, response: Response):
     con = sqlite3.connect("master.db")

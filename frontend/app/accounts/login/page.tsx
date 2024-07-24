@@ -28,7 +28,7 @@ const SubmitButton = (props: {
         localStorage.setItem("userId", serverError.responseMessage)
         console.log("Successfully authenticated")
         router.push("/dashboard")
-        
+
       }
     } else {
       props.errorSetter(errors)
@@ -66,7 +66,10 @@ export default function LoginModal() {
           name="email"
           placeholder="Email"
           onChange={(e) =>
-            setFormInput({ ...formInput, email: e.target.value.toString() })
+            setFormInput({
+              ...formInput,
+              email: e.target.value.toString()
+            })
           }
         />
         <input
@@ -77,7 +80,7 @@ export default function LoginModal() {
           onChange={(e) =>
             setFormInput({
               ...formInput,
-              password: e.target.value.toString(),
+              password: e.target.value.toString()
             })
           }
         />

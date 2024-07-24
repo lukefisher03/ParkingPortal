@@ -3,44 +3,45 @@
 import { useEffect, useState } from "react"
 import { getUserInfo, User } from "./script"
 import { GoPerson, GoX, GoTrash, GoInbox, GoScreenFull } from "react-icons/go"
-
+import styles from "./layout.module.css"
 import { CitationInfo, Vehicle } from "./script"
 import Image from "next/image";
 import suvPic from "./assets/suv.png"
 import sedanPic from "./assets/sedan.png"
 import truckPic from "./assets/truck.png"
 import vanPic from "./assets/van.png"
+import { PiPlusThin } from "react-icons/pi"
 
 export type VehicleCardInfo = {
     vehicle: Vehicle,
     citations: CitationInfo[]
 }
 
-export const VehicleCard = ({vehicle, citations}: VehicleCardInfo) => {
+export const VehicleCard = ({ vehicle, citations }: VehicleCardInfo) => {
     let vehiclePicture = suvPic
     switch (vehicle.kind) {
         case "sedan":
             vehiclePicture = sedanPic
             break;
-  
+
         case "suv":
             vehiclePicture = suvPic
             break;
-  
+
         case "van":
             vehiclePicture = vanPic
             break;
-  
+
         case "truck":
             vehiclePicture = truckPic
             break;
-  
+
         default:
             vehiclePicture = suvPic
             break;
     }
-  
-    function showCitations(c:CitationInfo[]) {
+
+    function showCitations(c: CitationInfo[]) {
         let s = ""
         c.forEach((citation, i) => {
             if (c.length <= 0) {
@@ -53,12 +54,12 @@ export const VehicleCard = ({vehicle, citations}: VehicleCardInfo) => {
                 s += `${c.length - 3} More...`
             }
         })
-  
+
         return (
-            <p style={{whiteSpace:"pre-wrap"}}>{s}</p>
+            <p style={{ whiteSpace: "pre-wrap" }}>{s}</p>
         )
     }
-  
+
     return (
         <section className="vehicle-card-wrapper">
             <section className="vehicle-card">
@@ -74,7 +75,7 @@ export const VehicleCard = ({vehicle, citations}: VehicleCardInfo) => {
                     <h1>{vehicle.nickname}</h1>
                     <h5>{vehicle.plate.toUpperCase()}</h5>
                 </div>
-  
+
                 <div className="citation-group">
                     <h6>Citations: </h6>
                     {citations &&
@@ -92,23 +93,58 @@ export const VehicleCard = ({vehicle, citations}: VehicleCardInfo) => {
             </div>
         </section>
     )
-  }
-  
+}
 
-export const AddVehicleModal = (props: {visible: boolean, backgroundColor?: string}) => {
+
+export const AddVehicleModal = (props: { backgroundColor?: string }) => {
+    const [visible, setVisible] = useState<boolean>(false)
+    const [formInput, setFormInput] = useState<{plate:string, nickname:string}>({
+        plate:"",
+        nickname: ""
+    })
     if (!props.backgroundColor) {
-        props.backgroundColor = "#bfa356"
+        props.backgroundColor = "#fffff"
     }
+
+    async function handleSubmit(e: React.MouseEvent) {
+        e.preventDefault()
+        console.log(formInput)
+    }
+
     return (
-       props.visible && <section className="modal-wrapper">
-            <div className="modal-body" style={{backgroundColor:props.backgroundColor}}>
-                <section className="exit-button-wrapper">
-                    <GoX size={20}/>
-                </section>
-            </div>
-        </section> 
+        <>
+            <PiPlusThin className={"add-vehicle"} size={50} onClick={(e) => { setVisible(true) }} />
+
+            {visible && <section className="modal-wrapper">
+                <div className="modal-body" style={{ backgroundColor: props.backgroundColor }}>
+                    <section className="exit-button-wrapper">
+                        <GoX size={20} onClick={(e) => { setVisible(false) }} />
+                    </section>
+                    <h1>Add Vehicle</h1>
+                    <form id="form">
+                        <input
+                            className={styles["text-input"]}
+                            type="text"
+                            name="plate"
+                            placeholder="License Plate"
+                            onChange={(e) => {setFormInput({...formInput, plate:e.target.value.toString()})}}
+                        />
+                        <input
+                            className={styles["text-input"]}
+                            type="text"
+                            name="nickname"
+                            placeholder="Nickname"
+                            onChange={(e) => {setFormInput({...formInput, nickname:e.target.value.toString()})}}
+                        />
+
+                        <input type="button" value="Submit" className={styles["form-button"]} onClick={handleSubmit}/>
+                    </form>
+                </div>
+            </section>}
+        </>
     )
 }
+
 
 
 

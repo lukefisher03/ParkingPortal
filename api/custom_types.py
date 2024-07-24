@@ -14,6 +14,8 @@ class LoginInfo(BaseModel):
     password: str
 
 class Vehicle(BaseModel):
-    nickname: str
-    plate: str
-    kind: str
+    nickname: str = ""
+    plate: str = ""
+    kind: str = ""
+
+    

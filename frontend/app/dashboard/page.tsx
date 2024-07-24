@@ -1,5 +1,4 @@
 import { TopBar, AddVehicleModal } from "./components"
-import { PiPlusThin } from "react-icons/pi";
 import { VehicleCard } from "./components";
 import { getCitationInfo, getVehicle, getUserVehicles } from "./script";
 import { cookies } from "next/headers";
@@ -41,10 +40,9 @@ export default async function Dasbboard() {
 
       <section className="vehicle-card-container">
         <VehicleCards/>
-        <PiPlusThin className={"add-vehicle"} size={50}/>
+        <AddVehicleModal/>
       </section>
   
-      <AddVehicleModal visible={false}/>
     </section>
   )
 }

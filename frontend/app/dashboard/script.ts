@@ -1,5 +1,3 @@
-"use server"
-
 export type CitationInfo = {
   citationNumber: string,
   location: string,
