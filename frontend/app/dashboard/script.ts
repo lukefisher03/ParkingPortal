@@ -26,8 +26,17 @@ export type Vehicle = {
 
 }
 
+function jsonToVehicle(jsonResponse: any):Vehicle {
+  return {
+    ownerId: jsonResponse["owner_id"],
+    vehicleId: jsonResponse["vehicle_id"],
+    plate: jsonResponse["plate"],
+    nickname: jsonResponse["nickname"],
+    kind: jsonResponse["kind"]
+  }
+}
+
 export const getCitationInfo = async (plate: string): Promise<CitationInfo[]> => {
-  console.log("CALLED GET CITATION!")
   const apiUrl = `http://127.0.0.1:8000/api/getCitations/${plate.toUpperCase()}` // ALL API CALLS USE UPPER CASE FOR QUERY PARAMS
   // let errorMessage = ""
 
@@ -40,7 +49,6 @@ export const getCitationInfo = async (plate: string): Promise<CitationInfo[]> =>
   }
 
   const response = await fetch(apiUrl, requestOptions)
-  console.log(response)
   const jsonResponse = await response.json()
   return jsonResponse as CitationInfo[]
 }
@@ -84,14 +92,29 @@ export const getVehicle = async (plate: string): Promise<Vehicle> => {
   const response = await fetch(apiUrl, requestOptions)
   const jsonResponse = await response.json()
 
-  const vehicle: Vehicle = {
-    ownerId: jsonResponse["owner_id"],
-    vehicleId: jsonResponse["vehicle_id"],
-    plate: jsonResponse["plate"],
-    nickname: jsonResponse["nickname"],
-    kind: jsonResponse["kind"]
+  return jsonToVehicle(jsonResponse)
+}
+
+
+export const getUserVehicles = async (userId: string): Promise<Vehicle[]> => {
+  const apiUrl = `http://127.0.0.1:8000/api/getVehicles/${userId}`
+  
+  const requestOptions:RequestInit = {
+    method: "GET",
+    headers: {
+      "Content-Type": "application/json",
+    },
+    cache: "no-cache"
   }
 
-  return vehicle
+  const response = await fetch(apiUrl, requestOptions)
+  const jsonResponse = await response.json()
+  let vehicles: Vehicle[] = []
+  
+  for (const v of jsonResponse) {
+    vehicles.push(jsonToVehicle(v))
+  }
+  
+  return vehicles
 }
 

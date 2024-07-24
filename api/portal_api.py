@@ -3,6 +3,7 @@ from fastapi import FastAPI, Response, status
 from fastapi.middleware.cors import CORSMiddleware
 import sqlite3
 import uuid
+from datetime import datetime, timedelta, timezone
 
 # import custom types
 from custom_types import LicensePlate, UserCredentials, LoginInfo, Vehicle
@@ -75,13 +76,13 @@ def login(login_info: LoginInfo, response: Response):
         server_response["authenticated"] = True
         server_response["userId"] = user_id
         server_response["error"] = None
+        response.set_cookie("userId", user_id, expires=datetime.now().replace(tzinfo=timezone.utc) + timedelta(days=5))
         response.status_code = status.HTTP_200_OK
     else:
         server_response["error"] = "Incorrect email or password, please try again"
         server_response["userId"] = None
         server_response["authenticated"] = False
         response.status_code = status.HTTP_401_UNAUTHORIZED
-
     return server_response
 
 
