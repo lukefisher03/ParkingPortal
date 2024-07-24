@@ -2,7 +2,7 @@
 
 import { Dispatch, SetStateAction, useContext, useEffect, useState } from "react"
 import styles from "../layout.module.css"
-import { LoginInfo, validateLoginInfo, postLoginInfo } from "./script"
+import { LoginInfo, validateLoginInfo, postLoginInfo } from "../script"
 import Link from "next/link"
 import { useRouter } from "next/navigation"
 

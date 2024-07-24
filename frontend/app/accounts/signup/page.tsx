@@ -2,7 +2,7 @@
 
 import { Dispatch, SetStateAction, useState } from "react"
 import styles from "../layout.module.css"
-import { SignupInfo, validateSignupInfo, postSignupInfo } from "./script"
+import { SignupInfo, validateSignupInfo, postSignupInfo } from "../script"
 import Link from "next/link"
 import { useRouter } from "next/navigation"
 
