@@ -1,10 +1,8 @@
 import { TopBar, AddVehicleModal } from "./components"
 import { PiPlusThin } from "react-icons/pi";
 import { VehicleCard } from "./components";
-import { getCitationInfo, CitationInfo, getVehicle, Vehicle, getUserVehicles } from "./script";
+import { getCitationInfo, getVehicle, getUserVehicles } from "./script";
 import { cookies } from "next/headers";
-import { ReactNode } from "react";
-import Router from "next/navigation";
 
 const fetchVehicleCardData = async (plate:string) => {
   return {
@@ -39,7 +37,6 @@ export default async function Dasbboard() {
   return (
     <section>
       <TopBar/>
-
       <h1 className="page-heading">My Vehicles</h1>
 
       <section className="vehicle-card-container">

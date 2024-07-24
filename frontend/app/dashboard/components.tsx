@@ -4,7 +4,7 @@ import { useEffect, useState } from "react"
 import { getUserInfo, User } from "./script"
 import { GoPerson, GoX, GoTrash, GoInbox, GoScreenFull } from "react-icons/go"
 
-import { CitationInfo, Vehicle } from "./script";
+import { CitationInfo, Vehicle } from "./script"
 import Image from "next/image";
 import suvPic from "./assets/suv.png"
 import sedanPic from "./assets/sedan.png"
