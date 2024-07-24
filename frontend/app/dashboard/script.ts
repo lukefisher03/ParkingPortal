@@ -27,30 +27,33 @@ export type Vehicle = {
 }
 
 export const getCitationInfo = async (plate: string): Promise<CitationInfo[]> => {
+  console.log("CALLED GET CITATION!")
   const apiUrl = `http://127.0.0.1:8000/api/getCitations/${plate.toUpperCase()}` // ALL API CALLS USE UPPER CASE FOR QUERY PARAMS
-  let errorMessage = ""
+  // let errorMessage = ""
 
-  const requestOptions = {
+  const requestOptions:RequestInit = {
     method: "GET",
     headers: {
       "Content-Type": "application/json",
-    }
+    },
+    cache: "no-cache"
   }
 
   const response = await fetch(apiUrl, requestOptions)
-  const jsonResponse = await response.json() as CitationInfo[]
-
-  return jsonResponse
+  console.log(response)
+  const jsonResponse = await response.json()
+  return jsonResponse as CitationInfo[]
 }
 
 export const getUserInfo = async (userId: string): Promise<User> => {
   const apiUrl = `http://127.0.0.1:8000/api/getUser/${userId}`
   
-  const requestOptions = {
+  const requestOptions:RequestInit = {
     method: "GET",
     headers: {
       "Content-Type": "application/json",
-    }
+    },
+    cache: "no-cache"
   }
 
   const response = await fetch(apiUrl, requestOptions)
@@ -70,11 +73,12 @@ export const getUserInfo = async (userId: string): Promise<User> => {
 export const getVehicle = async (plate: string): Promise<Vehicle> => {
   const apiUrl = `http://127.0.0.1:8000/api/getVehicle/${plate.toUpperCase()}`
   
-  const requestOptions = {
+  const requestOptions:RequestInit = {
     method: "GET",
     headers: {
       "Content-Type": "application/json",
-    }
+    },
+    cache: "no-cache"
   }
 
   const response = await fetch(apiUrl, requestOptions)

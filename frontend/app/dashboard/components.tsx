@@ -1,94 +1,33 @@
 "use client"
 
-import { useEffect, useState } from "react"
+import { useEffect, useState, useContext } from "react"
 import { CitationInfo, getCitationInfo, getUserInfo, getVehicle, User, Vehicle } from "./script"
-import { GoInbox, GoTrash, GoScreenFull, GoPerson } from "react-icons/go"
+import { GoInbox, GoTrash, GoScreenFull, GoPerson, GoX } from "react-icons/go"
 import Image, { StaticImageData } from "next/image"
 
-import suvPic from "./assets/suv.png"
-import sedanPic from "./assets/sedan.png"
-import truckPic from "./assets/truck.png"
-import vanPic from "./assets/van.png"
 
-
-export const VehicleCard = (props: { plate: string }) => {
-    const [citations, setCitations] = useState<CitationInfo[]>()
-    const [vehicle, setVehicle] = useState<Vehicle>()
-    const [loading, setLoading] = useState<boolean>(true)
-    const [vehiclePicture, setPicture] = useState<StaticImageData>()
-    
-    useEffect(() => {
-        const loadData = async () => {
-            setCitations(await getCitationInfo(props.plate) as CitationInfo[])
-            setVehicle(await getVehicle(props.plate) as Vehicle)
-        }
-        loadData()
-        setLoading(false)
-    }, [])
-
-    useEffect(() => {
-        if (vehicle) {
-            switch (vehicle.kind) {
-                case "sedan":
-                    setPicture(sedanPic)
-                    break;
-
-                case "suv":
-                    setPicture(suvPic)
-                    break;
-
-                case "van":
-                    setPicture(vanPic)
-                    break;
-
-                case "truck":
-                    setPicture(truckPic)
-                    break;
-
-                default:
-                    setPicture(suvPic)
-                    break;
-            }
-        }
-    }, [vehicle?.kind])
-
-    if (loading) {
-        return <>Loading...</>
+export const AddVehicleModal = (props: {backgroundColor?: string}) => {
+    const enabled = false;
+    if (!props.backgroundColor) {
+        props.backgroundColor = "#bfa356"
     }
-
     return (
-        <section className="vehicle-card-wrapper">
-            <section className="vehicle-card">
-                {vehiclePicture && <Image
-                    src={vehiclePicture}
-                    width={200}
-                    alt="SUV Picture"
-                />}
-                <h1>{vehicle?.nickname}</h1>
-                <h5>{vehicle?.plate.toUpperCase()}</h5>
-                <h6>Citations: </h6>
-                {citations &&
-                    <div>
-                        {citations.map(citation => (
-                            <p>{citation.location} </p>
-                        ))}
-                    </div>}
-            </section>
-            <div className="button-row">
-                <ul>
-                    <li><GoTrash /></li>
-                    <li><GoInbox /></li>
-                    <li><GoScreenFull /></li>
-                </ul>
+       enabled && <section className="modal-wrapper">
+            <div className="modal-body" style={{backgroundColor:props.backgroundColor}}>
+                <section className="exit-button-wrapper">
+                    <GoX size={20}/>
+                </section>
             </div>
-        </section>
+        </section> 
     )
 }
+
+
 
 export const TopBar = () => {
     const [user, setUser] = useState<User>()
     const loadData = async () => {
-        const userId = localStorage.getItem("userId")
+        const userId = localStorage.getItem("userId") // this normally would be a server component, but localstorage is only in the browser
         if (userId) {
             setUser(await getUserInfo(userId))
         }

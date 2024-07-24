@@ -32,6 +32,11 @@ nav ul li {
   display:inline-block;
 }
 
+.page-heading {
+  margin:50px 100px;
+  margin-left:100px;
+}
+
 .add-vehicle {
   color:rgb(172, 172, 172);
   border:1px solid rgb(172, 172, 172);
@@ -48,19 +53,26 @@ nav ul li {
 }
 
 .vehicle-card-wrapper {
+  min-height: 420px;
+  max-height: 420px;
+  padding:20px;
   border:1px solid rgb(154, 154, 154);
-  margin:10px;
+  margin:20px;
   border-radius: 5px;
   background:rgb(255, 255, 255);
 }
 
+.vehicle-card-wrapper:hover {
+  border:1px solid rgb(29, 29, 29);
+} 
+
 .vehicle-card-container {
   display:flex;
-  padding:100px;
+  padding:0px 100px;
   align-items: center;
+  align-content: flex-start;
 }
 .vehicle-card {
-  margin:50px;
   margin-bottom:20px;
   padding:10px;
 }
@@ -81,12 +93,16 @@ nav ul li {
 .vehicle-card p {
   font-size: 0.7em;
   margin:1px;
+  min-height:70px;
+  max-height: 70px;
 }
 
 .vehicle-card-wrapper .button-row ul {
   display: flex;
   justify-content:space-evenly;
+  align-items:end;
   padding:0;
+  margin:0;
 }
 
 .vehicle-card-wrapper .button-row ul li {
@@ -103,4 +119,51 @@ nav ul li {
   color:rgb(0, 98, 255);
   background:rgb(231, 231, 231);
   cursor:pointer;
+}
+
+.heading-group, .citation-group {
+  width:250px;
+  overflow: hidden;
+}
+
+.picture-container {
+  width:100%;
+  display: flex;
+  justify-content: center;
+}
+
+
+.modal-wrapper {
+  width:100%;
+  height:100%;
+  margin:0;
+  position:absolute;
+  top:0;
+  left:0;
+  background:rgba(123, 123, 123, 0.2);
+  display:flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.modal-body {
+  width:500px;
+  height:400px;
+  background:white;
+  border-radius: 10px;
+}
+
+.exit-button-wrapper {
+  width:100%;
+  display:flex;
+  justify-content: flex-end;
+}
+
+.exit-button-wrapper > * {
+  padding:10px;
+  color:rgb(216, 60, 60);
+}
+
+.exit-button-wrapper > *:hover {
+  cursor: pointer;
 }
