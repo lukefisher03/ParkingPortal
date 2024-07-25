@@ -1,8 +1,9 @@
 import { PiPlusLight, PiPlusThin } from "react-icons/pi";
-import { TopBar, AddVehicleModal, Modal, ModalWrapper, AddVehicleButton } from "./components"
+import { TopBar, AddVehicleButton } from "./components"
 import { VehicleCard } from "./components";
 import { getCitationInfo, getVehicle, getUserVehicles } from "./script";
 import { cookies } from "next/headers";
+import { ModalWrapper, ModalManager } from "./modals";
 
 const fetchVehicleCardData = async (plate: string) => {
   return {
@@ -42,9 +43,7 @@ export default async function Dasbboard() {
         <section className="vehicle-card-container">
           <VehicleCards />
           <AddVehicleButton/>
-          <Modal>
-            <AddVehicleModal />
-          </Modal>
+          <ModalManager/>
         </section>
       </ModalWrapper>
     </section>
