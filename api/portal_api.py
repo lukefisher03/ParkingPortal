@@ -1,0 +1,251 @@
+import get_ticket_status
+from fastapi import FastAPI, Response, status
+from fastapi.middleware.cors import CORSMiddleware
+import sqlite3
+import uuid
+from datetime import datetime, timedelta, timezone
+
+# import custom types
+from custom_types import LicensePlate, UserCredentials, LoginInfo, Vehicle
+
+app = FastAPI()
+DATABASE = "master.db"
+origins = ["http://localhost:3000"]
+
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=origins,
+    allow_credentials=True,
+    allow_methods=["GET", "POST"],
+)
+
+VEHICLE_KINDS = ["suv", "sedan", "truck", "van"]
+
+session = {"authenticated": False, "user_id": None}
+# Establish a requests session for web scraping
+
+
+#### Establish routes ####
+@app.post("/accounts/signup")
+def signup(user_creds: UserCredentials, response: Response):
+    server_response = {}
+    con = sqlite3.connect(DATABASE)
+    params = (
+        str(uuid.uuid4()),
+        user_creds.name,
+        user_creds.phone_number,
+        user_creds.email,
+        user_creds.password,
+    )
+
+    try:
+        with con:
+            con.execute("INSERT INTO users VALUES (?,?,?,?,?)", params)
+            response.status_code = status.HTTP_200_OK
+            session["user_id"] = params[0]
+            session["authenticated"] = True
+            server_response["authenticated"] = True
+            server_response["error"] = None
+            server_response["userId"] = params[0]
+    except sqlite3.IntegrityError as e:
+        response.status_code = status.HTTP_400_BAD_REQUEST
+        server_response["authenticated"] = False
+        server_response["error"] = (
+            "Email or phone number already registered, try logging in"
+        )
+    except Exception as e:
+        response.status_code = status.HTTP_400_BAD_REQUEST
+        server_response["authenticated"] = False
+        server_response["error"] = "User could not be created."
+
+    con.close()
+    return server_response
+
+
+@app.post("/accounts/login")
+def login(login_info: LoginInfo, response: Response):
+    con = sqlite3.connect(DATABASE)
+    cur = con.cursor()
+    server_response = {}
+
+    stored_hash, user_id = cur.execute(
+        "SELECT password, id FROM users WHERE email=?", (login_info.email,)
+    ).fetchone()
+
+    if stored_hash == login_info.password:
+        session["user_id"] = user_id
+        session["authenticated"] = True
+        server_response["authenticated"] = True
+        server_response["userId"] = user_id
+        server_response["error"] = None
+        response.set_cookie(
+            "userId",
+            user_id,
+            expires=datetime.now().replace(tzinfo=timezone.utc) + timedelta(days=5),
+        )
+        response.status_code = status.HTTP_200_OK
+    else:
+        server_response["error"] = "Incorrect email or password, please try again"
+        server_response["userId"] = None
+        server_response["authenticated"] = False
+        response.status_code = status.HTTP_401_UNAUTHORIZED
+    return server_response
+
+
+@app.post("/api/addVehicle")
+def add_vehicle(vehicle: Vehicle, response: Response):
+    if vehicle.kind.lower() not in VEHICLE_KINDS:
+        response.status_code = status.HTTP_400_BAD_REQUEST
+        return "Bad request, vehicle type is not valid"
+
+    if not session["authenticated"]:
+        response.status_code = status.HTTP_401_UNAUTHORIZED
+        return "Not Authorized!"
+
+    con = sqlite3.connect(DATABASE)
+
+    params = (
+        session["user_id"],
+        str(uuid.uuid4()),
+        vehicle.nickname,
+        vehicle.plate.upper(),
+        vehicle.kind.lower(),
+    )
+
+    try:
+        with con:
+            con.execute("INSERT INTO vehicles VALUES(?, ?, ?, ?, ?)", params)
+            response.status_code = status.HTTP_200_OK
+            return
+    except sqlite3.IntegrityError as e:
+        response.status_code = status.HTTP_403_FORBIDDEN
+        return
+    except Exception:
+        response.status_code = status.HTTP_400_BAD_REQUEST
+        return
+
+
+@app.post("/api/removeVehicle")
+def remove_vehicle(vehicle: Vehicle, response: Response):
+    if not session["authenticated"]:
+        response.status_code = status.HTTP_401_UNAUTHORIZED
+        return "Not authorized"
+    if (
+        not vehicle.vehicle_id
+        or not vehicle.owner_id
+    ):
+        response.status_code = status.HTTP_400_BAD_REQUEST
+        return "Missing data"
+    
+    con = sqlite3.connect(DATABASE)
+    cur = con.execute("DELETE FROM vehicles WHERE vehicle_id=? AND owner_id=?", (vehicle.vehicle_id, vehicle.owner_id,))
+    print(cur.connection)
+    con.commit()
+    con.close()
+    response.status_code = status.HTTP_200_OK
+    return 
+
+
+@app.get("/api/getUser/{id}")
+def getUser(id: str, response: Response):  # Need to add error handling to this
+    con = sqlite3.connect(DATABASE)
+
+    cur = con.execute(
+        "SELECT id, name, email, phone_number FROM users WHERE id=?", (id,)
+    )
+
+    return {k: v for (k, v) in zip([x[0] for x in cur.description], cur.fetchone())}
+
+
+@app.get("/api/getCitations/{plate}")
+def getCitations(plate: str, response: Response):  # Need to add error handling to this
+    con = sqlite3.connect(DATABASE)
+
+    cur = con.execute("SELECT * FROM citations WHERE plate=?", (plate,))
+    citationRows = cur.fetchall()
+    d = [
+        {k: v for (k, v) in zip([x[0] for x in cur.description], citation)}
+        for citation in citationRows
+    ]  # i know, i know...
+    con.close()
+    return d
+
+
+@app.get("/api/getVehicles/{userId}")
+def getVehicles(userId: str, response: Response):
+    con = sqlite3.connect(DATABASE)
+
+    vehicleList = []
+
+    with con:
+        vehicleRows = con.execute("SELECT * FROM vehicles WHERE owner_id=?", (userId,))
+        for vehicleData in vehicleRows.fetchall():
+            vehicle = {}
+            for t, v in zip([x[0] for x in vehicleRows.description], vehicleData):
+                vehicle[t] = v
+            vehicleList.append(vehicle)
+    return vehicleList
+
+
+@app.get("/api/getVehicle/")
+def getVehicle(plate: str, owner_id: str, response: Response):
+    con = sqlite3.connect(DATABASE)
+
+    with con:
+        vehicleRow = con.execute(
+            "SELECT * FROM vehicles WHERE plate=? AND owner_id=?",
+            (
+                plate,
+                owner_id,
+            ),
+        )
+
+        vehicle = {
+            k: v
+            for (k, v) in zip(
+                [x[0] for x in vehicleRow.description], vehicleRow.fetchone()
+            )
+        }
+    return vehicle
+
+
+@app.post("/api/updateVehicleInfo")
+def update_plate_info(plate: LicensePlate, response: Response):
+    con = sqlite3.connect(DATABASE)
+    message = "Successfully retrieved plate data"
+    session_info = get_ticket_status.beginSession()
+
+    citations = get_ticket_status.getVehicleInfoByPlate(plate.plate, session_info)
+
+    if not citations:
+        response.status_code = status.HTTP_204_NO_CONTENT
+        return "No citations found"
+
+    formatted_citations = []
+    for citation in citations.values():
+        formatted_citation = []
+        for _, value in citation.items():
+            formatted_citation.append(value)
+        formatted_citations.append(tuple(formatted_citation))
+        print(formatted_citation)
+    try:
+        with con:
+            con.executemany(
+                "INSERT INTO citations VALUES (?,?,?,?,?,?,?,?,?) \
+                    ON CONFLICT(citation_number) DO UPDATE SET \
+                        location=excluded.location, plate=excluded.plate, \
+                        vin=excluded.vin, issue_date=excluded.issue_date, \
+                        due_date=excluded.due_date, \
+                        status=excluded.status, \
+                        amount_due=excluded.amount_due, \
+                        citation_link=excluded.citation_link",
+                formatted_citations,
+            )
+            response.status_code = status.HTTP_200_OK
+    except Exception as e:
+        print(f"An exception occurred: {e}")
+        response.status_code = status.HTTP_400_BAD_REQUEST
+        message = "Bad request"
+
+    con.close()
+    return message
