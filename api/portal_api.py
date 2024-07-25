@@ -9,7 +9,7 @@ from datetime import datetime, timedelta, timezone
 from custom_types import LicensePlate, UserCredentials, LoginInfo, Vehicle
 
 app = FastAPI()
-
+DATABASE = "master.db"
 origins = ["http://localhost:3000"]
 
 app.add_middleware(
@@ -29,7 +29,7 @@ session = {"authenticated": False, "user_id": None}
 @app.post("/accounts/signup")
 def signup(user_creds: UserCredentials, response: Response):
     server_response = {}
-    con = sqlite3.connect("master.db")
+    con = sqlite3.connect(DATABASE)
     params = (
         str(uuid.uuid4()),
         user_creds.name,
@@ -42,14 +42,17 @@ def signup(user_creds: UserCredentials, response: Response):
         with con:
             con.execute("INSERT INTO users VALUES (?,?,?,?,?)", params)
             response.status_code = status.HTTP_200_OK
-
+            session["user_id"] = params[0]
+            session["authenticated"] = True
             server_response["authenticated"] = True
             server_response["error"] = None
             server_response["userId"] = params[0]
     except sqlite3.IntegrityError as e:
         response.status_code = status.HTTP_400_BAD_REQUEST
         server_response["authenticated"] = False
-        server_response["error"] = "Email or phone number already registered, try logging in"
+        server_response["error"] = (
+            "Email or phone number already registered, try logging in"
+        )
     except Exception as e:
         response.status_code = status.HTTP_400_BAD_REQUEST
         server_response["authenticated"] = False
@@ -61,7 +64,7 @@ def signup(user_creds: UserCredentials, response: Response):
 
 @app.post("/accounts/login")
 def login(login_info: LoginInfo, response: Response):
-    con = sqlite3.connect("master.db")
+    con = sqlite3.connect(DATABASE)
     cur = con.cursor()
     server_response = {}
 
@@ -75,7 +78,11 @@ def login(login_info: LoginInfo, response: Response):
         server_response["authenticated"] = True
         server_response["userId"] = user_id
         server_response["error"] = None
-        response.set_cookie("userId", user_id, expires=datetime.now().replace(tzinfo=timezone.utc) + timedelta(days=5))
+        response.set_cookie(
+            "userId",
+            user_id,
+            expires=datetime.now().replace(tzinfo=timezone.utc) + timedelta(days=5),
+        )
         response.status_code = status.HTTP_200_OK
     else:
         server_response["error"] = "Incorrect email or password, please try again"
@@ -87,7 +94,7 @@ def login(login_info: LoginInfo, response: Response):
 
 @app.post("/api/addVehicle")
 def add_vehicle(vehicle: Vehicle, response: Response):
-    if (vehicle.kind not in VEHICLE_KINDS): 
+    if vehicle.kind.lower() not in VEHICLE_KINDS:
         response.status_code = status.HTTP_400_BAD_REQUEST
         return "Bad request, vehicle type is not valid"
 
@@ -95,70 +102,83 @@ def add_vehicle(vehicle: Vehicle, response: Response):
         response.status_code = status.HTTP_401_UNAUTHORIZED
         return "Not Authorized!"
 
-    con = sqlite3.connect("master.db")
+    con = sqlite3.connect(DATABASE)
 
-    params = (session["user_id"], str(uuid.uuid4()), vehicle.nickname, vehicle.plate.upper(), vehicle.kind.lower())
+    params = (
+        session["user_id"],
+        str(uuid.uuid4()),
+        vehicle.nickname,
+        vehicle.plate.upper(),
+        vehicle.kind.lower(),
+    )
 
     try:
         with con:
             con.execute("INSERT INTO vehicles VALUES(?, ?, ?, ?, ?)", params)
-            return "Vehicle successfully added"
+            response.status_code = status.HTTP_200_OK
+            return
     except sqlite3.IntegrityError as e:
         response.status_code = status.HTTP_403_FORBIDDEN
-        return f"Exception:\n {e}"
-    
-# @app.post("/api/removeVehicle")
-# def remove_vehicle(vehicle: Vehicle, response: Response):
-#     if not session["authenticated"]:
-#         response.status_code = status.HTTP_401_UNAUTHORIZED
-#         return "Not Authorized!"
-    
-#     con = sqlite3.connect("master.db")
+        return
+    except Exception:
+        response.status_code = status.HTTP_400_BAD_REQUEST
+        return
 
-#     params = (session["user_id"], str(uuid.uuid4()), vehicle.nickname, vehicle.plate.upper(), vehicle.kind.lower())
 
-#     try:
-#         with con:
-#             con.execute("INSERT INTO vehicles VALUES(?, ?, ?, ?, ?)", params)
-#             return "Vehicle successfully added"
-#     except sqlite3.IntegrityError as e:
-#         response.status_code = status.HTTP_403_FORBIDDEN
-#         return f"Exception:\n {e}"
+@app.post("/api/removeVehicle")
+def remove_vehicle(vehicle: Vehicle, response: Response):
+    if not session["authenticated"]:
+        response.status_code = status.HTTP_401_UNAUTHORIZED
+        return "Not authorized"
+    if (
+        not vehicle.vehicle_id
+        or not vehicle.owner_id
+    ):
+        response.status_code = status.HTTP_400_BAD_REQUEST
+        return "Missing data"
     
+    con = sqlite3.connect(DATABASE)
+    cur = con.execute("DELETE FROM vehicles WHERE vehicle_id=? AND owner_id=?", (vehicle.vehicle_id, vehicle.owner_id,))
+    print(cur.connection)
+    con.commit()
+    con.close()
+    response.status_code = status.HTTP_200_OK
+    return 
 
-    
+
 @app.get("/api/getUser/{id}")
-def getUser(id: str, response: Response):
-    con = sqlite3.connect("master.db")
+def getUser(id: str, response: Response):  # Need to add error handling to this
+    con = sqlite3.connect(DATABASE)
 
     cur = con.execute(
         "SELECT id, name, email, phone_number FROM users WHERE id=?", (id,)
     )
 
-    return {k:v for (k,v) in zip([x[0] for x in cur.description], cur.fetchone())}
+    return {k: v for (k, v) in zip([x[0] for x in cur.description], cur.fetchone())}
+
 
 @app.get("/api/getCitations/{plate}")
-def getCitations(plate: str, response: Response):
-    con = sqlite3.connect("master.db")
+def getCitations(plate: str, response: Response):  # Need to add error handling to this
+    con = sqlite3.connect(DATABASE)
 
-    cur = con.execute(
-        "SELECT * FROM citations WHERE plate=?", (plate,)
-    )
+    cur = con.execute("SELECT * FROM citations WHERE plate=?", (plate,))
     citationRows = cur.fetchall()
-    d = [{k:v for (k,v) in zip([x[0] for x in cur.description], citation)} for citation in citationRows] # i know, i know...
+    d = [
+        {k: v for (k, v) in zip([x[0] for x in cur.description], citation)}
+        for citation in citationRows
+    ]  # i know, i know...
     con.close()
     return d
 
+
 @app.get("/api/getVehicles/{userId}")
 def getVehicles(userId: str, response: Response):
-    con = sqlite3.connect("master.db")
+    con = sqlite3.connect(DATABASE)
 
     vehicleList = []
-    
+
     with con:
-        vehicleRows = con.execute(
-            "SELECT * FROM vehicles WHERE owner_id=?", (userId,)
-        )
+        vehicleRows = con.execute("SELECT * FROM vehicles WHERE owner_id=?", (userId,))
         for vehicleData in vehicleRows.fetchall():
             vehicle = {}
             for t, v in zip([x[0] for x in vehicleRows.description], vehicleData):
@@ -167,29 +187,40 @@ def getVehicles(userId: str, response: Response):
     return vehicleList
 
 
-@app.get("/api/getVehicle/{plate}")
-def getVehicles(plate: str, response: Response):
-    con = sqlite3.connect("master.db")
+@app.get("/api/getVehicle/")
+def getVehicle(plate: str, owner_id: str, response: Response):
+    con = sqlite3.connect(DATABASE)
 
-    vehicleList = []
-    
     with con:
         vehicleRow = con.execute(
-            "SELECT * FROM vehicles WHERE plate=?", (plate,)
+            "SELECT * FROM vehicles WHERE plate=? AND owner_id=?",
+            (
+                plate,
+                owner_id,
+            ),
         )
 
-        vehicle = {k:v for (k,v) in zip([x[0] for x in vehicleRow.description], vehicleRow.fetchone())}
+        vehicle = {
+            k: v
+            for (k, v) in zip(
+                [x[0] for x in vehicleRow.description], vehicleRow.fetchone()
+            )
+        }
     return vehicle
 
+
 @app.post("/api/updateVehicleInfo")
-def update_plate_info(license_plate: LicensePlate, response: Response):
-    con = sqlite3.connect("master.db")
+def update_plate_info(plate: LicensePlate, response: Response):
+    con = sqlite3.connect(DATABASE)
     message = "Successfully retrieved plate data"
     session_info = get_ticket_status.beginSession()
 
-    citations = get_ticket_status.getVehicleInfoByPlate(
-        license_plate.license_plate, session_info
-    )
+    citations = get_ticket_status.getVehicleInfoByPlate(plate.plate, session_info)
+
+    if not citations:
+        response.status_code = status.HTTP_204_NO_CONTENT
+        return "No citations found"
+
     formatted_citations = []
     for citation in citations.values():
         formatted_citation = []

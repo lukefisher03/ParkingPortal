@@ -1,11 +1,16 @@
 .text-input {
-    width:40%;
+    width:50%;
     border:0.5px solid rgb(195, 195, 195);
     outline:none;
     padding:10px;
     margin:10px 0px;
     border-radius: 2px;
     display:block;
+}
+
+.select-input {
+    width:50%;
+    margin:10px 0px;
 }
 
 .form-button {
@@ -18,5 +23,5 @@
     border-radius: 5px;
     background-color: rgb(0, 0, 0);
     cursor:pointer;
-    margin-top:10px;
+    margin-top:20px;
 }

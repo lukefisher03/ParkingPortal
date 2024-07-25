@@ -1,3 +1,7 @@
+"use server"
+
+import { cookies } from "next/headers"
+import { jsonToVehicle } from "./utils"
 export type CitationInfo = {
   citationNumber: string,
   location: string,
@@ -24,16 +28,6 @@ export type Vehicle = {
   nickname: string,
   kind: string
 
-}
-
-function jsonToVehicle(jsonResponse: any):Vehicle {
-  return {
-    ownerId: jsonResponse["owner_id"],
-    vehicleId: jsonResponse["vehicle_id"],
-    plate: jsonResponse["plate"],
-    nickname: jsonResponse["nickname"],
-    kind: jsonResponse["kind"]
-  }
 }
 
 export const getCitationInfo = async (plate: string): Promise<CitationInfo[]> => {
@@ -79,8 +73,9 @@ export const getUserInfo = async (userId: string): Promise<User> => {
 
 
 export const getVehicle = async (plate: string): Promise<Vehicle> => {
-  const apiUrl = `http://127.0.0.1:8000/api/getVehicle/${plate.toUpperCase()}`
-  
+  const cookieStore = cookies()
+  const apiUrl = `http://127.0.0.1:8000/api/getVehicle/?plate=${plate.toUpperCase()}&owner_id=${cookieStore.get("userId")?.value}` // error-handling
+  console.log(apiUrl)
   const requestOptions:RequestInit = {
     method: "GET",
     headers: {

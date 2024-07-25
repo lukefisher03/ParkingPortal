@@ -11,3 +11,10 @@ Test signup post request
 
 Test login post request
     curl -H "Content-Type: application/json" -X POST http://127.0.0.1:8000/accounts/login -d @utils/sample_login.json
+
+PLATES:
+
+JJN4759
+JCD5232
+JGA7846
+JEJ6785

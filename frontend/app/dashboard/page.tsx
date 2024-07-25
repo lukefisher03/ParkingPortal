@@ -1,9 +1,10 @@
-import { TopBar, AddVehicleModal } from "./components"
+import { PiPlusLight, PiPlusThin } from "react-icons/pi";
+import { TopBar, AddVehicleModal, Modal, ModalWrapper, AddVehicleButton } from "./components"
 import { VehicleCard } from "./components";
 import { getCitationInfo, getVehicle, getUserVehicles } from "./script";
 import { cookies } from "next/headers";
 
-const fetchVehicleCardData = async (plate:string) => {
+const fetchVehicleCardData = async (plate: string) => {
   return {
     vehicle: await getVehicle(plate),
     citations: await getCitationInfo(plate)
@@ -19,8 +20,9 @@ const VehicleCards = async () => {
   }
 
   const vehicles = await getUserVehicles(userId.value)
-  const vehicleCards = vehicles.map(async v => 
-    <VehicleCard  {...(await fetchVehicleCardData(v.plate))}/>
+  console.log(vehicles)
+  const vehicleCards = vehicles.map(async v =>
+    <VehicleCard  {...(await fetchVehicleCardData(v.plate))} />
   )
 
   return (
@@ -32,17 +34,19 @@ const VehicleCards = async () => {
 
 
 export default async function Dasbboard() {
-  const i = await fetchVehicleCardData("JJN4759")
   return (
     <section>
-      <TopBar/>
-      <h1 className="page-heading">My Vehicles</h1>
-
-      <section className="vehicle-card-container">
-        <VehicleCards/>
-        <AddVehicleModal/>
-      </section>
-  
+      <ModalWrapper>
+        <TopBar />
+        <h1 className="page-heading">My Vehicles</h1>
+        <section className="vehicle-card-container">
+          <VehicleCards />
+          <AddVehicleButton/>
+          <Modal>
+            <AddVehicleModal />
+          </Modal>
+        </section>
+      </ModalWrapper>
     </section>
   )
 }
