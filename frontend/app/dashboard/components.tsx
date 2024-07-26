@@ -72,6 +72,14 @@ export const VehicleCard = ({ vehicle, citations }: VehicleCardInfo) => {
         modalContext.setVisibility(true)
     }
 
+    async function handleShowCitations(e: React.MouseEvent) {
+        e.preventDefault()
+
+        modalContext.setProps(vehicle)
+        modalContext.setActiveModal(modals["citations"])
+        modalContext.setVisibility(true)
+    }
+
     return (
         <section className="vehicle-card-wrapper">
             <section className="vehicle-card">
@@ -100,7 +108,7 @@ export const VehicleCard = ({ vehicle, citations }: VehicleCardInfo) => {
                 <ul>
                     <li><GoTrash onClick={handleRemove} /></li>
                     <li><GoInbox /></li>
-                    <li><GoScreenFull /></li>
+                    <li><GoScreenFull onClick={handleShowCitations}/></li>
                 </ul>
             </div>
         </section>

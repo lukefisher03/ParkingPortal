@@ -71,14 +71,15 @@ def login(login_info: LoginInfo, response: Response):
         "SELECT password, user_id FROM users WHERE email=?", (login_info.email,)
     )
 
-    stored_hash, user_id = res.fetchone()
+    item = res.fetchone()
 
-    # COME BACK TO THIS
-    # if not res.fetchone():
-    #     response.status_code = status.HTTP_404_NOT_FOUND
-    #     server_response["authenticated"] = False
-    #     server_response["error"] = "Could not locate that account"
-    #     return server_response
+    if not item:
+        response.status_code = status.HTTP_404_NOT_FOUND
+        server_response["authenticated"] = False
+        server_response["error"] = "Could not locate that account"
+        return server_response
+    
+    stored_hash, user_id = item
 
     if stored_hash == login_info.password:
         session["user_id"] = user_id
@@ -252,15 +253,23 @@ def getUser(user_id: str, response: Response):  # Need to add error handling to 
 @app.get("/api/getCitations/")
 def getCitations(plate: str, response: Response):  # Need to add error handling to this
     con = sqlite3.connect(DATABASE)
-
+    
+    if not session["authenticated"]:
+        response.status_code = status.HTTP_401_UNAUTHORIZED
+        return {}
     cur = con.execute("SELECT * FROM citations WHERE plate=?", (plate,))
     citationRows = cur.fetchall()
+
+    if not citationRows:
+        response.status_code = status.HTTP_404_NOT_FOUND
+        return {}
+
     d = [
         {k: v for (k, v) in zip([x[0] for x in cur.description], citation)}
         for citation in citationRows
     ]  # i know, i know...
     con.close()
-    return d
+    return d 
 
 
 @app.get("/api/getVehicles/")

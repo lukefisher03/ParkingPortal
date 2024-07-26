@@ -18,10 +18,6 @@ export const validateLoginInfo = (signupInfo: LoginInfo): string => {
     errorMessage += "Email is invalid\n"
   }
 
-  if (signupInfo["password"].length < 8) {
-    errorMessage += "Password must be at least 8 characters\n"
-  }
-
   return errorMessage
 }
 

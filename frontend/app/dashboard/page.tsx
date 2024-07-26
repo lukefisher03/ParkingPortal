@@ -6,9 +6,11 @@ import { cookies } from "next/headers";
 import { ModalWrapper, ModalManager } from "./modals";
 
 const fetchVehicleCardData = async (plate: string) => {
+  const citationResponse = await getCitationInfo(plate)
+  const vehicleResponse = await getVehicle(plate)
   return {
-    vehicle: await getVehicle(plate),
-    citations: await getCitationInfo(plate)
+    vehicle: vehicleResponse.vehicle,
+    citations: citationResponse.citationList
   }
 }
 

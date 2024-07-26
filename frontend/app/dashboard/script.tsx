@@ -3,6 +3,7 @@
 import { cookies } from "next/headers"
 import { jsonToVehicle } from "./utils"
 import { ServerResponse } from "./utils"
+
 export type CitationInfo = {
   citationNumber: string,
   location: string,
@@ -31,7 +32,17 @@ export type Vehicle = {
 
 }
 
-export const getCitationInfo = async (plate: string): Promise<CitationInfo[]> => {
+export type CitationInfoServerResponse = ServerResponse & {
+  citationList: CitationInfo[]
+}
+
+export const getCitationInfo = async (plate: string): Promise<CitationInfoServerResponse> => {
+  const serverResponse: CitationInfoServerResponse = {
+    error: false,
+    body: "",
+    citationList: []
+  }
+
   const apiUrl = `http://127.0.0.1:8000/api/getCitations/?plate=${plate.toUpperCase()}` // ALL API CALLS USE UPPER CASE FOR QUERY PARAMS
   // let errorMessage = ""
 
@@ -44,8 +55,25 @@ export const getCitationInfo = async (plate: string): Promise<CitationInfo[]> =>
   }
 
   const response = await fetch(apiUrl, requestOptions)
-  const jsonResponse = await response.json()
-  return jsonResponse as CitationInfo[]
+  switch (response.status) {
+    case 200:
+      serverResponse.body = "Success"
+      serverResponse.citationList = await response.json()
+      break
+    case 401:
+        serverResponse.error = true
+        serverResponse.body = "Not Authorized"
+        break
+      case 404:
+        serverResponse.error = true
+        serverResponse.body = "No citations found"
+    default:
+        serverResponse.error = true
+        serverResponse.body = "An unknown error occurred, probably on our end"
+      break;
+  }
+
+  return serverResponse
 }
 
 type UserInfoServerResponse = ServerResponse & {
@@ -107,8 +135,22 @@ export const getUserInfo = async (): Promise<UserInfoServerResponse> => {
   return serverResponse
 }
 
+export type GetVehicleResponse = ServerResponse & {
+  vehicle: Vehicle
+}
 
-export const getVehicle = async (plate: string): Promise<Vehicle> => {
+export const getVehicle = async (plate: string): Promise<GetVehicleResponse> => {
+  const serverResponse: GetVehicleResponse = {
+    error: true,
+    body: "",
+    vehicle: {
+      vehicleId:"",
+      plate: "",
+      userId: "",
+      kind: "",
+      nickname: ""
+    }
+  }
   const cookieStore = cookies()
   const apiUrl = `http://127.0.0.1:8000/api/getVehicle/?plate=${plate.toUpperCase()}&user_id=${cookieStore.get("userId")?.value}` // error-handling
   const requestOptions: RequestInit = {
@@ -120,8 +162,25 @@ export const getVehicle = async (plate: string): Promise<Vehicle> => {
   }
 
   const response = await fetch(apiUrl, requestOptions)
-  const jsonResponse = await response.json()
-  return jsonToVehicle(jsonResponse)
+  switch (response.status) {
+    case 200:
+      serverResponse.body = "Success"
+      serverResponse.vehicle = jsonToVehicle(await response.json())
+      break
+    case 401:
+        serverResponse.error = true
+        serverResponse.body = "Not Authorized"
+        break
+      case 404:
+        serverResponse.error = true
+        serverResponse.body = "No citations found"
+    default:
+        serverResponse.error = true
+        serverResponse.body = "An unknown error occurred, probably on our end"
+      break;
+  }
+  
+  return serverResponse
 }
 
 

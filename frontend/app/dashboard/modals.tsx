@@ -8,11 +8,13 @@ import { addVehicle, getUserDelegateEmails, removeVehicle, DelegateEmail, addUse
 import { User, Vehicle } from "./script"
 import styles from "./layout.module.css"
 import { DelegateUserEmail } from "./components"
-
+import { CitationInfo } from "./script"
+import { getCitationInfo } from "./script"
 export enum modals {
     addVehicle,
     removeVehicle,
-    userManagement
+    userManagement,
+    citations
 }
 
 export type ModalInformation = {
@@ -67,6 +69,8 @@ export const ModalManager = () => {
         case 2:
             Child = <UserManagementModal user={modalContext.props as User}></UserManagementModal>
             break
+        case 3:
+            Child = <CitationsModal vehicle={modalContext.props as Vehicle}></CitationsModal>
         default:
             break
     }
@@ -234,6 +238,53 @@ export const UserManagementModal = (props: { user: User }) => {
             }} />
             <input type="button" value="Add Delegate Email" className={styles["form-button"]} onClick={handleSubmit} />
             <p style={{color:"red", fontSize:"0.7em"}}>{error}</p>
+        </>
+    )
+}
+
+export const CitationsModal = (props: { vehicle: Vehicle}) => {
+
+    const [citationList, setCitationList] = useState<CitationInfo[]>([])
+
+    useEffect(() => {
+        const collectCitations = async () => {
+            const response = await getCitationInfo(props.vehicle.plate)
+            if (response.error) {
+                console.error(response.body)
+                return
+            } 
+
+            setCitationList([...(response.citationList)])
+        }
+
+        collectCitations()
+    }, [])
+
+    const buildCitationTable = (citations: CitationInfo[]) => {
+        return citations.map((citation) => 
+           <tr>
+            <td>{citation.citationNumber}</td>
+            <td>{citation.location}</td>
+            <td>{citation.issueDate}</td>
+            <td>{citation.due_date}</td>
+            <td>{citation.status}</td>
+           </tr>
+        )
+    }
+
+    useEffect(() => {
+        console.log(citationList)
+    }, [citationList])
+
+
+    return (
+        <>
+        <h1>Citations for <i>{props.vehicle.nickname}</i></h1>
+        {(citationList.length > 0) && 
+            <table>
+                
+            </table>
+        }
         </>
     )
 }
