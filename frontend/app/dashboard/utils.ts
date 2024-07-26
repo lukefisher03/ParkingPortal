@@ -1,11 +1,15 @@
 import { Vehicle } from "./script"
 
+export type ServerResponse = {
+  error: boolean,
+  body: any
+}
 export function jsonToVehicle(jsonResponse: any):Vehicle {
     return {
-      ownerId: jsonResponse["owner_id"],
+      userId: jsonResponse["user_id"],
       vehicleId: jsonResponse["vehicle_id"],
-      plate: jsonResponse["plate"],
       nickname: jsonResponse["nickname"],
+      plate: jsonResponse["plate"],
       kind: jsonResponse["kind"]
     }
   }

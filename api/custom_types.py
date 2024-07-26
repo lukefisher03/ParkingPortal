@@ -22,4 +22,9 @@ class Vehicle(BaseModel):
     plate: str = ""
     kind: str = ""
     vehicle_id: str = ""
-    owner_id: str = ""
+    user_id: str = ""
+
+
+class EmailInfo(BaseModel):
+    email: str
+    label: str

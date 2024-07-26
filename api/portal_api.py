@@ -6,7 +6,7 @@ import uuid
 from datetime import datetime, timedelta, timezone
 
 # import custom types
-from custom_types import LicensePlate, UserCredentials, LoginInfo, Vehicle
+from custom_types import LicensePlate, UserCredentials, LoginInfo, Vehicle, EmailInfo
 
 app = FastAPI()
 DATABASE = "master.db"
@@ -26,7 +26,7 @@ session = {"authenticated": False, "user_id": None}
 
 
 #### Establish routes ####
-@app.post("/accounts/signup")
+@app.post("/accounts/signup/")
 def signup(user_creds: UserCredentials, response: Response):
     server_response = {}
     con = sqlite3.connect(DATABASE)
@@ -46,7 +46,7 @@ def signup(user_creds: UserCredentials, response: Response):
             session["authenticated"] = True
             server_response["authenticated"] = True
             server_response["error"] = None
-            server_response["userId"] = params[0]
+            server_response["user_id"] = params[0]
     except sqlite3.IntegrityError as e:
         response.status_code = status.HTTP_400_BAD_REQUEST
         server_response["authenticated"] = False
@@ -62,15 +62,23 @@ def signup(user_creds: UserCredentials, response: Response):
     return server_response
 
 
-@app.post("/accounts/login")
+@app.post("/accounts/login/")
 def login(login_info: LoginInfo, response: Response):
     con = sqlite3.connect(DATABASE)
     cur = con.cursor()
     server_response = {}
+    res = cur.execute(
+        "SELECT password, user_id FROM users WHERE email=?", (login_info.email,)
+    )
 
-    stored_hash, user_id = cur.execute(
-        "SELECT password, id FROM users WHERE email=?", (login_info.email,)
-    ).fetchone()
+    stored_hash, user_id = res.fetchone()
+
+    # COME BACK TO THIS
+    # if not res.fetchone():
+    #     response.status_code = status.HTTP_404_NOT_FOUND
+    #     server_response["authenticated"] = False
+    #     server_response["error"] = "Could not locate that account"
+    #     return server_response
 
     if stored_hash == login_info.password:
         session["user_id"] = user_id
@@ -92,7 +100,84 @@ def login(login_info: LoginInfo, response: Response):
     return server_response
 
 
-@app.post("/api/addVehicle")
+@app.post("/accounts/addUserEmail/")
+def addUserEmail(email_info: EmailInfo, response: Response):
+    if not session["authenticated"]:
+        response.status_code = status.HTTP_401_UNAUTHORIZED
+        return response.status_code
+    con = sqlite3.connect(DATABASE)
+    try:
+        with con:
+            con.execute(
+                "INSERT INTO emails VALUES(?, ?, ?)",
+                (
+                    session["user_id"],
+                    email_info.email,
+                    email_info.label,
+                ),
+            )
+            response.status_code = status.HTTP_200_OK
+            return response.status_code
+    except sqlite3.IntegrityError as e:
+        response.status_code = status.HTTP_409_CONFLICT
+        return response.status_code
+    except Exception as e:
+        response.status_code = status.HTTP_400_BAD_REQUEST
+        return response.status_code
+
+
+@app.post("/accounts/removeUserEmail/")
+def removeUserEmail(email_info: EmailInfo, response: Response):
+    con = sqlite3.connect(DATABASE)
+
+    if not session["authenticated"]:
+        response.status_code = status.HTTP_401_UNAUTHORIZED
+        return response.status_code
+    try:
+        with con:
+            con.execute(
+                "DELETE FROM emails WHERE user_id=? AND email=? AND label=?",
+                (
+                    session["user_id"],
+                    email_info.email,
+                    email_info.label,
+                ),
+            )
+            response.status_code = status.HTTP_200_OK
+            return response.status_code
+    except sqlite3.IntegrityError as e:
+        response.status_code = status.HTTP_409_CONFLICT
+        return response.status_code
+    except Exception as e:
+        response.status_code = status.HTTP_400_BAD_REQUEST
+        return response.status_code
+
+
+@app.get("/accounts/getUserDelegateEmails/")
+def getUserDelegateEmails(response: Response):
+    if not session["authenticated"]:
+        response.status_code = status.HTTP_401_UNAUTHORIZED
+        return response.status_code
+
+    con = sqlite3.connect(DATABASE)
+
+    try:
+        with con:
+            email_list = con.execute(
+                "SELECT email, label FROM emails WHERE user_id=?",
+                (session["user_id"],),
+            ).fetchall()
+            response.status_code = status.HTTP_200_OK
+            return [
+                {k: v for (k, v) in zip(["email", "label"], item)}
+                for item in email_list
+            ]
+    except Exception as e:
+        response.status_code = status.HTTP_400_BAD_REQUEST
+        return response.status_code
+
+
+@app.post("/api/addVehicle/")
 def add_vehicle(vehicle: Vehicle, response: Response):
     if vehicle.kind.lower() not in VEHICLE_KINDS:
         response.status_code = status.HTTP_400_BAD_REQUEST
@@ -118,46 +203,53 @@ def add_vehicle(vehicle: Vehicle, response: Response):
             response.status_code = status.HTTP_200_OK
             return
     except sqlite3.IntegrityError as e:
-        response.status_code = status.HTTP_403_FORBIDDEN
+        response.status_code = status.HTTP_409_CONFLICT
         return
     except Exception:
         response.status_code = status.HTTP_400_BAD_REQUEST
         return
 
 
-@app.post("/api/removeVehicle")
+@app.post("/api/removeVehicle/")
 def remove_vehicle(vehicle: Vehicle, response: Response):
     if not session["authenticated"]:
         response.status_code = status.HTTP_401_UNAUTHORIZED
         return "Not authorized"
-    if (
-        not vehicle.vehicle_id
-        or not vehicle.owner_id
-    ):
+    if not vehicle.vehicle_id or not vehicle.user_id:
         response.status_code = status.HTTP_400_BAD_REQUEST
         return "Missing data"
-    
+
     con = sqlite3.connect(DATABASE)
-    cur = con.execute("DELETE FROM vehicles WHERE vehicle_id=? AND owner_id=?", (vehicle.vehicle_id, vehicle.owner_id,))
-    print(cur.connection)
+    cur = con.execute(
+        "DELETE FROM vehicles WHERE vehicle_id=? AND user_id=?",
+        (
+            vehicle.vehicle_id,
+            vehicle.user_id,
+        ),
+    )
     con.commit()
     con.close()
     response.status_code = status.HTTP_200_OK
-    return 
+    return
 
 
-@app.get("/api/getUser/{id}")
-def getUser(id: str, response: Response):  # Need to add error handling to this
+@app.get("/api/getUser/")
+def getUser(user_id: str, response: Response):  # Need to add error handling to this
+    if not session["authenticated"]:
+        response.status_code = status.HTTP_401_UNAUTHORIZED
+        return {}
     con = sqlite3.connect(DATABASE)
 
     cur = con.execute(
-        "SELECT id, name, email, phone_number FROM users WHERE id=?", (id,)
+        "SELECT user_id, name, email, phone_number FROM users WHERE user_id=?",
+        (user_id,),
     )
 
+    response.status_code = status.HTTP_200_OK
     return {k: v for (k, v) in zip([x[0] for x in cur.description], cur.fetchone())}
 
 
-@app.get("/api/getCitations/{plate}")
+@app.get("/api/getCitations/")
 def getCitations(plate: str, response: Response):  # Need to add error handling to this
     con = sqlite3.connect(DATABASE)
 
@@ -171,14 +263,14 @@ def getCitations(plate: str, response: Response):  # Need to add error handling 
     return d
 
 
-@app.get("/api/getVehicles/{userId}")
-def getVehicles(userId: str, response: Response):
+@app.get("/api/getVehicles/")
+def getVehicles(user_id: str, response: Response):
     con = sqlite3.connect(DATABASE)
 
     vehicleList = []
 
     with con:
-        vehicleRows = con.execute("SELECT * FROM vehicles WHERE owner_id=?", (userId,))
+        vehicleRows = con.execute("SELECT * FROM vehicles WHERE user_id=?", (user_id,))
         for vehicleData in vehicleRows.fetchall():
             vehicle = {}
             for t, v in zip([x[0] for x in vehicleRows.description], vehicleData):
@@ -188,28 +280,24 @@ def getVehicles(userId: str, response: Response):
 
 
 @app.get("/api/getVehicle/")
-def getVehicle(plate: str, owner_id: str, response: Response):
+def getVehicle(plate: str, user_id: str, response: Response):
     con = sqlite3.connect(DATABASE)
 
     with con:
         vehicleRow = con.execute(
-            "SELECT * FROM vehicles WHERE plate=? AND owner_id=?",
+            "SELECT * FROM vehicles WHERE plate=? AND user_id=?",
             (
                 plate,
-                owner_id,
+                user_id,
             ),
         )
 
-        vehicle = {
-            k: v
-            for (k, v) in zip(
-                [x[0] for x in vehicleRow.description], vehicleRow.fetchone()
-            )
-        }
+        row = vehicleRow.fetchone()
+        vehicle = {k: v for (k, v) in zip([x[0] for x in vehicleRow.description], row)}
     return vehicle
 
 
-@app.post("/api/updateVehicleInfo")
+@app.post("/api/updateVehicleInfo/")
 def update_plate_info(plate: LicensePlate, response: Response):
     con = sqlite3.connect(DATABASE)
     message = "Successfully retrieved plate data"
@@ -227,7 +315,6 @@ def update_plate_info(plate: LicensePlate, response: Response):
         for _, value in citation.items():
             formatted_citation.append(value)
         formatted_citations.append(tuple(formatted_citation))
-        print(formatted_citation)
     try:
         with con:
             con.executemany(
@@ -243,7 +330,6 @@ def update_plate_info(plate: LicensePlate, response: Response):
             )
             response.status_code = status.HTTP_200_OK
     except Exception as e:
-        print(f"An exception occurred: {e}")
         response.status_code = status.HTTP_400_BAD_REQUEST
         message = "Bad request"
 

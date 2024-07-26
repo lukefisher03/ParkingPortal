@@ -21,7 +21,6 @@ const VehicleCards = async () => {
   }
 
   const vehicles = await getUserVehicles(userId.value)
-  console.log(vehicles)
   const vehicleCards = vehicles.map(async v =>
     <VehicleCard  {...(await fetchVehicleCardData(v.plate))} />
   )

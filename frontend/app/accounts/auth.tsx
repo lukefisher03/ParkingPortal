@@ -7,7 +7,7 @@ import { cookies } from "next/headers"
 
 export const postLoginInfo = async (body: LoginInfo): Promise<{ error: boolean, responseMessage: string }> => {
     const cookieStore = cookies()
-    const apiUrl = "http://127.0.0.1:8000/accounts/login"
+    const apiUrl = "http://127.0.0.1:8000/accounts/login/"
     let error = false
     let responseMessage = ""
   
@@ -23,14 +23,12 @@ export const postLoginInfo = async (body: LoginInfo): Promise<{ error: boolean, 
   
     const response = await fetch(apiUrl, requestOptions)
     const jsonResponse = await response.json()
-  
     if (jsonResponse["error"]) {
       responseMessage = jsonResponse["error"]
       error = true
     } else {
       responseMessage = jsonResponse["userId"]
       cookieStore.set("userId", responseMessage)
-      
     }
   
     return { error: error, responseMessage: responseMessage }
@@ -39,7 +37,7 @@ export const postLoginInfo = async (body: LoginInfo): Promise<{ error: boolean, 
   
   export const postSignupInfo = async (body: SignupInfo): Promise<{ error: boolean, responseMessage: string }> => {
   
-    const apiUrl = "http://127.0.0.1:8000/accounts/signup"
+    const apiUrl = "http://127.0.0.1:8000/accounts/signup/"
     const cookieStore = cookies()
 
     let responseMessage = ""
@@ -55,14 +53,14 @@ export const postLoginInfo = async (body: LoginInfo): Promise<{ error: boolean, 
   
     const response = await fetch(apiUrl, requestOptions)
     const jsonResponse = await response.json()
-  
-    if (jsonResponse["error"]) {
+    if (await jsonResponse["error"]) {
       error = true
-      responseMessage = jsonResponse["error"]
+      responseMessage = await jsonResponse["error"]
     } else {
-      responseMessage = jsonResponse["userId"]
+      responseMessage = await jsonResponse["user_id"]
       cookieStore.set("userId", responseMessage)
     }
+
     return { error: error, responseMessage: responseMessage }
   }
   

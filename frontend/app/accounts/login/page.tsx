@@ -26,7 +26,6 @@ const SubmitButton = (props: {
         props.errorSetter(serverError.responseMessage)
       } else {
         localStorage.setItem("userId", serverError.responseMessage)
-        console.log("Successfully authenticated")
         router.push("/dashboard")
 
       }

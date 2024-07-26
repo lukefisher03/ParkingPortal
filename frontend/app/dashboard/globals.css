@@ -164,8 +164,16 @@ nav ul li {
   padding:30px;
 }
 
-.modal-body p {
+.modal-body p, .modal-body li {
   font-size: 0.8em;
+}
+
+.modal-body ul {
+  list-style: none;
+}
+
+.modal-body li {
+  padding:5px 0;
 }
 
 .exit-button-wrapper {

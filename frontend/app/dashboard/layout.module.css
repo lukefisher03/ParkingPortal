@@ -25,3 +25,12 @@
     cursor:pointer;
     margin-top:20px;
 }
+
+.clickable:hover {
+    cursor: pointer;
+}
+
+.modal-heading {
+    padding-bottom:10px;
+    border-bottom: 1px solid rgb(190, 190, 190);
+}
