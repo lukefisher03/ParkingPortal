@@ -10,10 +10,10 @@ export type CitationInfo = {
   plate: string,
   vin: string,
   issueDate: string,
-  due_date: string,
+  dueDate: string,
   status: string,
-  amount_due: string,
-  citation_link: string
+  amountDue: string,
+  citationLink: string
 }
 
 export type User = {
@@ -55,21 +55,37 @@ export const getCitationInfo = async (plate: string): Promise<CitationInfoServer
   }
 
   const response = await fetch(apiUrl, requestOptions)
+  const jsonResponse = await response.json()
   switch (response.status) {
     case 200:
       serverResponse.body = "Success"
-      serverResponse.citationList = await response.json()
+      for (const citation of jsonResponse) {
+        serverResponse.citationList = [
+          ...serverResponse.citationList,
+          { 
+            citationNumber: citation["citation_number"], 
+            location: citation["location"],
+            plate: citation["plate"],
+            vin: citation["vin"],
+            issueDate: citation["issue_date"],
+            dueDate: citation["due_date"],
+            status: citation["status"],
+            amountDue: citation["amount_due"],
+            citationLink: citation["citation_link"]
+          } as CitationInfo
+        ]
+      }
       break
     case 401:
-        serverResponse.error = true
-        serverResponse.body = "Not Authorized"
-        break
-      case 404:
-        serverResponse.error = true
-        serverResponse.body = "No citations found"
+      serverResponse.error = true
+      serverResponse.body = "Not Authorized"
+      break
+    case 404:
+      serverResponse.error = true
+      serverResponse.body = "No citations found"
     default:
-        serverResponse.error = true
-        serverResponse.body = "An unknown error occurred, probably on our end"
+      serverResponse.error = true
+      serverResponse.body = "An unknown error occurred, probably on our end"
       break;
   }
 
@@ -119,17 +135,17 @@ export const getUserInfo = async (): Promise<UserInfoServerResponse> => {
     cookieStore.delete("userId")
     return serverResponse
   }
-  
+
   serverResponse.user = {
-      userId: jsonResponse["user_id"],
-      name: jsonResponse["name"],
-      email: jsonResponse["email"],
-      phoneNumber: jsonResponse["phone_number"]
+    userId: jsonResponse["user_id"],
+    name: jsonResponse["name"],
+    email: jsonResponse["email"],
+    phoneNumber: jsonResponse["phone_number"]
   }
 
   serverResponse.body = "Success"
   serverResponse.error = false
-  
+
 
 
   return serverResponse
@@ -144,7 +160,7 @@ export const getVehicle = async (plate: string): Promise<GetVehicleResponse> => 
     error: true,
     body: "",
     vehicle: {
-      vehicleId:"",
+      vehicleId: "",
       plate: "",
       userId: "",
       kind: "",
@@ -168,18 +184,18 @@ export const getVehicle = async (plate: string): Promise<GetVehicleResponse> => 
       serverResponse.vehicle = jsonToVehicle(await response.json())
       break
     case 401:
-        serverResponse.error = true
-        serverResponse.body = "Not Authorized"
-        break
-      case 404:
-        serverResponse.error = true
-        serverResponse.body = "No citations found"
+      serverResponse.error = true
+      serverResponse.body = "Not Authorized"
+      break
+    case 404:
+      serverResponse.error = true
+      serverResponse.body = "No citations found"
     default:
-        serverResponse.error = true
-        serverResponse.body = "An unknown error occurred, probably on our end"
+      serverResponse.error = true
+      serverResponse.body = "An unknown error occurred, probably on our end"
       break;
   }
-  
+
   return serverResponse
 }
 

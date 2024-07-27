@@ -180,6 +180,6 @@ export const DelegateUserEmail = (props: {delegateEmailItem: DelegateEmail, refr
         await props.refreshEmailList()
     }
     return (
-        <li>{props.delegateEmailItem.email} | <i>{props.delegateEmailItem.label}</i>  <GoTrash cursor="pointer" style={{ color: "red", float: "right", marginRight:"50px"}} onClick={handleClick} /></li>
+        <li>{props.delegateEmailItem.email} | <i>{props.delegateEmailItem.label}</i>  <GoTrash cursor="pointer" style={{ color: "red", float: "right", margin:"0 20px"}} onClick={handleClick} /></li>
     )
 }
