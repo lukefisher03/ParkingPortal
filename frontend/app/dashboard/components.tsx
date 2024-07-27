@@ -2,7 +2,7 @@
 
 import { useContext, useEffect, useState } from "react"
 import { getUserInfo, User } from "./script"
-import { GoPerson, GoTrash, GoInbox, GoScreenFull } from "react-icons/go"
+import { GoPerson, GoTrash, GoInbox, GoScreenFull, GoX } from "react-icons/go"
 import { CitationInfo, Vehicle } from "./script"
 import Image from "next/image";
 import suvPic from "./assets/suv.png"
@@ -11,6 +11,8 @@ import truckPic from "./assets/truck.png"
 import vanPic from "./assets/van.png"
 import { PiPlusThin } from "react-icons/pi"
 import { ModalVisibilityContext, modals } from "./modals"
+import styles from "./layout.module.css"
+import { DelegateEmail, removeUserDelegateEmail } from "./actions"
 
 export type VehicleCardInfo = {
     vehicle: Vehicle,
@@ -70,6 +72,22 @@ export const VehicleCard = ({ vehicle, citations }: VehicleCardInfo) => {
         modalContext.setVisibility(true)
     }
 
+    async function handleShowCitations(e: React.MouseEvent) {
+        e.preventDefault()
+
+        modalContext.setProps(vehicle)
+        modalContext.setActiveModal(modals["citations"])
+        modalContext.setVisibility(true)
+    }
+
+    async function handleShowNotifications(e: React.MouseEvent) {
+        e.preventDefault()
+
+        modalContext.setProps(vehicle)
+        modalContext.setActiveModal(modals["notifications"])
+        modalContext.setVisibility(true)
+    }
+
     return (
         <section className="vehicle-card-wrapper">
             <section className="vehicle-card">
@@ -97,8 +115,8 @@ export const VehicleCard = ({ vehicle, citations }: VehicleCardInfo) => {
             <div className="button-row">
                 <ul>
                     <li><GoTrash onClick={handleRemove} /></li>
-                    <li><GoInbox /></li>
-                    <li><GoScreenFull /></li>
+                    <li><GoInbox onClick={handleShowNotifications}/></li>
+                    <li><GoScreenFull onClick={handleShowCitations}/></li>
                 </ul>
             </div>
         </section>
@@ -114,11 +132,23 @@ export const AddVehicleButton = () => {
 }
 
 export const TopBar = () => {
-    const [user, setUser] = useState<User>()
+    const modalContext = useContext(ModalVisibilityContext)
+    const [user, setUser] = useState<User>({
+        name: "",
+        userId: "",
+        email: "",
+        phoneNumber: ""
+    })
+
     const loadData = async () => {
-        const userId = localStorage.getItem("userId") // this normally would be a server component, but localstorage is only in the browser
-        if (userId) {
-            setUser(await getUserInfo(userId))
+        const response = await getUserInfo()
+        if (!response.error) {
+            setUser(response.user)
+        } else {
+            setUser({
+                ...user,
+                name:response.body
+            })
         }
     }
 
@@ -126,14 +156,38 @@ export const TopBar = () => {
         loadData()
     }, [])
 
+    async function handleClick(e: React.MouseEvent) {
+        e.preventDefault()
+        modalContext.setProps(user)
+        modalContext.setActiveModal(modals["userManagement"])
+        modalContext.setVisibility(true)
+    }
+
 
     return (
         <nav>
             <h3>Parking Portal</h3>
             <ul>
                 <li>{user?.name}</li>
-                <li><GoPerson size={20} /></li>
+                <li onClick={handleClick} className={styles["clickable"]}><GoPerson size={20} /></li>
             </ul>
         </nav>
+    )
+}
+
+export const DelegateUserEmail = (props: {delegateEmailItem: DelegateEmail, refreshEmailList: () => Promise<void>}) => {
+    async function handleClick(e: React.MouseEvent) {
+        e.preventDefault()
+
+        const response = await removeUserDelegateEmail(props.delegateEmailItem)
+        
+        if (response.error) {
+            console.error(response.body)
+        }
+
+        await props.refreshEmailList()
+    }
+    return (
+        <li>{props.delegateEmailItem.email} | <i>{props.delegateEmailItem.label}</i>  <GoTrash cursor="pointer" style={{ color: "red", float: "right", margin:"0 20px"}} onClick={handleClick} /></li>
     )
 }

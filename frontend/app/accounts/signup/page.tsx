@@ -105,7 +105,7 @@ export default function SignupModal() {
             })
           }
         />
-        <p className={styles["signup-errors"]}>{errors}</p>
+        <p className={styles["errors"]}>{errors}</p>
         <p className={styles["login-redirect"]}>
           Already have an account? <Link href="login">Login</Link>
         </p>

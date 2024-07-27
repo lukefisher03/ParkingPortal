@@ -16,6 +16,10 @@ body, html {
                                   supported by Chrome, Edge, Opera and Firefox */
 }
 
+h1 {
+  font-size:1.4em;
+}
+
 nav {
   background:white;
   width:100%;
@@ -158,14 +162,21 @@ nav ul li {
 }
 
 .modal-body {
-  width:400px;
   background:white;
   border-radius: 10px;
   padding:30px;
 }
 
-.modal-body p {
+.modal-body p, .modal-body li {
   font-size: 0.8em;
+}
+
+.modal-body ul {
+  list-style: none;
+}
+
+.modal-body li {
+  padding:5px 0;
 }
 
 .exit-button-wrapper {
@@ -185,4 +196,56 @@ nav ul li {
 .modal-body form {
   padding: 0 50px;
   margin-top:0px;
+}
+
+.user-management-modal {
+  min-width: 400px;
+  padding:20px;
+}
+
+.remove-vehicle-modal {
+  width:300px;
+  padding:20px;
+}
+
+.citations-modal {
+  padding:20px;
+}
+
+.add-vehicle-modal {
+  min-width:250px;
+}
+
+.citations-modal table {
+  border-collapse: collapse;
+}
+
+.citations-modal table .header-row {
+  border-bottom: 0.5px solid rgb(167, 167, 167);
+}
+
+.citations-modal table td, .citations-modal table th {
+  text-align: left;
+  min-width: 200px;
+}
+
+.citations-modal table tr:nth-child(even) {
+  background-color: rgb(246, 246, 246);
+}
+
+.citations-modal table td {
+  padding:10px 0;
+}
+
+.notifications-modal {
+  min-width: 400px;
+}
+
+.notifications-modal h1{
+  border-bottom: 0.5px solid rgb(167, 167, 167);
+}
+
+a {
+  color:rgb(0, 89, 144);
+  text-decoration: none;
 }

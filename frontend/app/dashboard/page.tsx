@@ -1,14 +1,17 @@
 import { PiPlusLight, PiPlusThin } from "react-icons/pi";
 import { TopBar, AddVehicleButton } from "./components"
 import { VehicleCard } from "./components";
-import { getCitationInfo, getVehicle, getUserVehicles } from "./script";
+import { getCitationInfo, getVehicle, getUserVehicles, notifyUser } from "./script";
 import { cookies } from "next/headers";
 import { ModalWrapper, ModalManager } from "./modals";
 
 const fetchVehicleCardData = async (plate: string) => {
+  const citationResponse = await getCitationInfo(plate)
+  const vehicleResponse = await getVehicle(plate)
+  notifyUser()
   return {
-    vehicle: await getVehicle(plate),
-    citations: await getCitationInfo(plate)
+    vehicle: vehicleResponse.vehicle,
+    citations: citationResponse.citationList
   }
 }
 
@@ -21,7 +24,6 @@ const VehicleCards = async () => {
   }
 
   const vehicles = await getUserVehicles(userId.value)
-  console.log(vehicles)
   const vehicleCards = vehicles.map(async v =>
     <VehicleCard  {...(await fetchVehicleCardData(v.plate))} />
   )
