@@ -1,10 +1,10 @@
 To-Do List
 
-[ ] Implement CRUD operations on database
-[ ] Write basic unit tests for api routes
-[ ] Set up React boilerplate (If I decide to use React)
-[ ] Decide which front-end framework to use...
-[ ] Create an automated script to stand up and tear down infrastructure for testing
+[x] Implement CRUD operations on database
+[x] Write basic unit tests for api routes
+[x] Set up React boilerplate (If I decide to use React)
+[x] Decide which front-end framework to use...
+[x] Create an automated script to stand up and tear down infrastructure for testing
 
 Done:
 
@@ -13,8 +13,3 @@ Done:
 [x] Write script to build SQLite database
 [x] Implement basic FastAPI routes
 [x] Scrape all ticket info off of the citation portal and implement functions into the API backend for the webapp.
-
-Don't forget to....
-
-[ ] When building front-end login, don't forget to encrypt the password hash before sending to the backend.
-[ ] 
