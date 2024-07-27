@@ -28,8 +28,9 @@ export type Vehicle = {
   userId: string,
   vehicleId: string,
   nickname: string,
-  kind: string
-
+  kind: string,
+  lastNotificationDate: number,
+  notificationCount: number
 }
 
 export type CitationInfoServerResponse = ServerResponse & {
@@ -164,7 +165,9 @@ export const getVehicle = async (plate: string): Promise<GetVehicleResponse> => 
       plate: "",
       userId: "",
       kind: "",
-      nickname: ""
+      nickname: "",
+      notificationCount: 1,
+      lastNotificationDate: 0
     }
   }
   const cookieStore = cookies()
@@ -199,7 +202,6 @@ export const getVehicle = async (plate: string): Promise<GetVehicleResponse> => 
   return serverResponse
 }
 
-
 export const getUserVehicles = async (userId: string): Promise<Vehicle[]> => {
   const apiUrl = `http://127.0.0.1:8000/api/getVehicles/?user_id=${userId}`
 
@@ -222,3 +224,38 @@ export const getUserVehicles = async (userId: string): Promise<Vehicle[]> => {
   return vehicles
 }
 
+export const notifyUser = async (): Promise<ServerResponse> => {
+  const serverResponse: ServerResponse = {
+    error: false,
+    body: ""
+  }
+
+  const requestOptions: RequestInit = {
+    method: "POST",
+    mode: "cors",
+    headers: {
+        "Content-Type": "application/json",
+    }
+}
+
+  const apiUrl = "http://127.0.0.1:8000/api/manageNotifications/"
+
+  const response = await fetch(apiUrl, requestOptions)
+
+  switch (response.status) {
+    case 200:
+      serverResponse.error = false
+      serverResponse.body = "Success"
+      break
+    case 401:
+      serverResponse.error = true
+      serverResponse.body = "Not authenticated"
+      break
+    default:
+      serverResponse.error = true
+      serverResponse.body = "An unknown error occurred"
+      break
+  }
+
+  return serverResponse
+}

@@ -15,7 +15,7 @@ cur.execute(
     "CREATE TABLE users (user_id UNIQUE, name, phone_number UNIQUE, email UNIQUE, password)"
 )
 cur.execute(
-    "CREATE TABLE vehicles (user_id, vehicle_id, nickname, plate, kind, UNIQUE(user_id, plate), UNIQUE(user_id, nickname))"
+    "CREATE TABLE vehicles (user_id, vehicle_id, nickname, plate, kind, last_notification_date, notification_count, UNIQUE(user_id, plate), UNIQUE(user_id, nickname))"
 )
 cur.execute(
     "CREATE TABLE citations (citation_number UNIQUE, location, plate, vin, issue_date, due_date, status, amount_due, citation_link)"

@@ -10,6 +10,8 @@ export function jsonToVehicle(jsonResponse: any):Vehicle {
       vehicleId: jsonResponse["vehicle_id"],
       nickname: jsonResponse["nickname"],
       plate: jsonResponse["plate"],
-      kind: jsonResponse["kind"]
+      kind: jsonResponse["kind"],
+      notificationCount: jsonResponse["notification_count"],
+      lastNotificationDate: jsonResponse["last_notification_date"]
     }
   }

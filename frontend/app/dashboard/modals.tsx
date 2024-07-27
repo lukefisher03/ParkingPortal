@@ -14,7 +14,8 @@ export enum modals {
   addVehicle,
   removeVehicle,
   userManagement,
-  citations
+  citations,
+  notifications
 }
 
 export type ModalInformation = {
@@ -71,6 +72,9 @@ export const ModalManager = () => {
       break
     case 3:
       Child = <CitationsModal vehicle={modalContext.props as Vehicle}></CitationsModal>
+      break
+    case 4:
+      Child = <NotificationsModal vehicle={modalContext.props as Vehicle}></NotificationsModal>
     default:
       break
   }
@@ -244,6 +248,21 @@ export const UserManagementModal = (props: { user: User }) => {
   )
 }
 
+export const NotificationsModal = (props: { vehicle: Vehicle }) => {
+  console.log(props.vehicle.lastNotificationDate)
+  const formatted_date = new Date(props.vehicle.lastNotificationDate * 1000)
+  return (
+    <section className="notifications-modal">
+      <h1>Notification details</h1>
+      <h6>Number of notifications sent</h6>
+      <p>{props.vehicle.notificationCount}</p>
+      <h6>Last notification</h6>
+      {(props.vehicle.notificationCount != 0) && <p><i>{formatted_date.toDateString()} at {formatted_date.toLocaleTimeString()}</i></p>}
+      {!props.vehicle.notificationCount && <p><i>No notifications have been sent</i></p>}
+    </section>
+  )
+}
+
 export const CitationsModal = (props: { vehicle: Vehicle }) => {
 
   const [citationList, setCitationList] = useState<CitationInfo[]>([])
@@ -272,7 +291,7 @@ export const CitationsModal = (props: { vehicle: Vehicle }) => {
         <td>{citation.dueDate}</td>
         <td>{citation.amountDue}</td>
         <td>{citation.status}</td>
-        <td style={{textAlign: "center"}}><a href={citation.citationLink} target="_blank" rel="noreferrer noopener">PAY</a></td>
+        <td style={{ textAlign: "center" }}><a href={citation.citationLink} target="_blank" rel="noreferrer noopener">PAY</a></td>
       </tr>
     )
 
@@ -287,20 +306,27 @@ export const CitationsModal = (props: { vehicle: Vehicle }) => {
   return (
     <section className="citations-modal">
       <h1>Citations for <i>{props.vehicle.nickname}</i></h1>
-      {(citationList.length > 0) &&
-        <table className="citation-table">
-          <tr className="header-row">
-            <th>Citation Number</th>
-            <th>Location</th>
-            <th>Issue Date</th>
-            <th>Due Date</th>
-            <th>Amount Due</th>
-            <th>Status</th>
-            <th></th>
-          </tr>
-          {citationElements}
-        </table>
-      }
+
+      <table className="citation-table">
+        <tr className="header-row">
+          <th>Citation Number</th>
+          <th>Location</th>
+          <th>Issue Date</th>
+          <th>Due Date</th>
+          <th>Amount Due</th>
+          <th>Status</th>
+          <th></th>
+        </tr>
+        {(citationList.length > 0) &&
+          <>{citationElements}</>
+        }
+
+
+        {(citationList.length <= 0) &&
+            <p>No citations found</p>
+        }
+      </table>
+
     </section>
   )
 }

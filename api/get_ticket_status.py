@@ -37,7 +37,6 @@ def parsePlateData(data: BeautifulSoup, test=False):
     table_rows.pop(
         0
     )  # The table has a header row. This row contains no data, remove from row list.
-    print(table_rows)
     for row in table_rows:
         if "No results found" in row.text:
             print("NO RESULTS FOUND")

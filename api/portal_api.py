@@ -1,3 +1,4 @@
+import time
 import get_ticket_status
 from fastapi import FastAPI, Response, status
 from fastapi.middleware.cors import CORSMiddleware
@@ -6,12 +7,12 @@ import uuid
 from datetime import datetime, timedelta, timezone
 
 # import custom types
-from custom_types import LicensePlate, UserCredentials, LoginInfo, Vehicle, EmailInfo
+from custom_types import LicensePlate, UserCredentials, LoginInfo, Vehicle, EmailInfo, NotificationEmail
+from smtp_email import send_notification_emails
 
 app = FastAPI()
 DATABASE = "master.db"
 origins = ["http://localhost:3000"]
-
 app.add_middleware(
     CORSMiddleware,
     allow_origins=origins,
@@ -20,8 +21,8 @@ app.add_middleware(
 )
 
 VEHICLE_KINDS = ["suv", "sedan", "truck", "van"]
-
-session = {"authenticated": False, "user_id": None}
+NOTIFICATION_CADENCE = 7 # Notify every 7 days
+session = {"authenticated": False, "user_id": None, "user": {}}
 # Establish a requests session for web scraping
 
 
@@ -44,6 +45,10 @@ def signup(user_creds: UserCredentials, response: Response):
             response.status_code = status.HTTP_200_OK
             session["user_id"] = params[0]
             session["authenticated"] = True
+            session["user"] = {
+                "name": user_creds.name,
+                "email": user_creds.email
+            }
             server_response["authenticated"] = True
             server_response["error"] = None
             server_response["user_id"] = params[0]
@@ -68,7 +73,7 @@ def login(login_info: LoginInfo, response: Response):
     cur = con.cursor()
     server_response = {}
     res = cur.execute(
-        "SELECT password, user_id FROM users WHERE email=?", (login_info.email,)
+        "SELECT * FROM users WHERE email=?", (login_info.email,)
     )
 
     item = res.fetchone()
@@ -79,11 +84,14 @@ def login(login_info: LoginInfo, response: Response):
         server_response["error"] = "Could not locate that account"
         return server_response
     
-    stored_hash, user_id = item
-
-    if stored_hash == login_info.password:
-        session["user_id"] = user_id
+    user_id, name, phone_number, email, password = item
+    if password == login_info.password:
+        session["user_id"] = item[0]
         session["authenticated"] = True
+        session["user"] = {
+            "name": name,
+            "email": email,
+        }
         server_response["authenticated"] = True
         server_response["userId"] = user_id
         server_response["error"] = None
@@ -168,6 +176,7 @@ def getUserDelegateEmails(response: Response):
                 "SELECT email, label FROM emails WHERE user_id=?",
                 (session["user_id"],),
             ).fetchall()
+            session["user"]["delegate_emails"] = [item[0] for item in email_list]
             response.status_code = status.HTTP_200_OK
             return [
                 {k: v for (k, v) in zip(["email", "label"], item)}
@@ -196,11 +205,13 @@ def add_vehicle(vehicle: Vehicle, response: Response):
         vehicle.nickname,
         vehicle.plate.upper(),
         vehicle.kind.lower(),
+        int(time.time()), # last notification date
+        0  # number of notifications
     )
 
     try:
         with con:
-            con.execute("INSERT INTO vehicles VALUES(?, ?, ?, ?, ?)", params)
+            con.execute("INSERT INTO vehicles VALUES(?, ?, ?, ?, ?, ?, ?)", params)
             response.status_code = status.HTTP_200_OK
             return
     except sqlite3.IntegrityError as e:
@@ -271,7 +282,6 @@ def getCitations(plate: str, response: Response):  # Need to add error handling 
     con.close()
     return d 
 
-
 @app.get("/api/getVehicles/")
 def getVehicles(user_id: str, response: Response):
     con = sqlite3.connect(DATABASE)
@@ -282,10 +292,51 @@ def getVehicles(user_id: str, response: Response):
         vehicleRows = con.execute("SELECT * FROM vehicles WHERE user_id=?", (user_id,))
         for vehicleData in vehicleRows.fetchall():
             vehicle = {}
+
             for t, v in zip([x[0] for x in vehicleRows.description], vehicleData):
                 vehicle[t] = v
             vehicleList.append(vehicle)
+
     return vehicleList
+
+@app.post("/api/manageNotifications/")
+def manageNotifications(response: Response):
+    msg = ""
+    vehicles_to_notify = []
+    getVehicleResponse = Response
+    con = sqlite3.connect(DATABASE)
+
+    if not session["authenticated"]:
+        response.status_code = status.HTTP_401_UNAUTHORIZED
+        return
+
+    vehicleList = getVehicles(session["user_id"], getVehicleResponse)
+
+    for vehicle in vehicleList:
+        days_since_last_notification = (int(time.time()) - vehicle.get("last_notification_date")) // 864e2
+
+        if (days_since_last_notification > NOTIFICATION_CADENCE or vehicle.get("notification_count") <= 0):
+            citationResponse = Response
+            citations = getCitations(vehicle.get("plate"), citationResponse)
+            open_citations = False
+
+            vehicle["citations"] = []
+            for citation in citations:
+                if citation.get("amount_due") != "None":
+                    open_citations = True
+                    vehicle["citations"].append(citation)
+            if open_citations:
+                vehicles_to_notify.append(vehicle)
+    with con:
+        if vehicles_to_notify:
+            for v in vehicles_to_notify:
+                con.execute("UPDATE vehicles SET last_notification_date=?, notification_count=? WHERE vehicle_id=?", (int(time.time()), v.get("notification_count") + 1, v.get("vehicle_id")))
+    
+    if vehicles_to_notify:
+        delegateEmails = [item["email"] for item in getUserDelegateEmails(Response)]
+        send_notification_emails(vehicles_to_notify, [session["user"].get("email"), *delegateEmails])
+
+    response.status_code = status.HTTP_200_OK
 
 
 @app.get("/api/getVehicle/")
