@@ -39,6 +39,16 @@ If you navigate to [`http://localhost:3000/accounts/signup`](http://localhost:30
 ### Notes about email integration
 This app relies on an SMTP connection to a mail client. You will need to set up an email account and enable SMTP Auth in order for your user to be able to manage notifications.
 
+If you do have an email account with an SMTP client then provide it in a file named `credentials.json` in the `/api/` directory like so:
+```
+{
+    "email": "your-awesome-email@coolsite.com",
+    "password": "password"
+}
+```
+
+Note: If you're using outlook you will need to enable two factor authentication and set up an [application password](https://support.microsoft.com/en-us/account-billing/how-to-get-and-use-app-passwords-5896ed9b-4263-e681-128a-a6f2979a7944). 
+
 # UI screenshots
 ![Screenshot of dashboard page](assets/Dashboard.png)
 ![Screenshot of dashboard page](assets/Login.png)
