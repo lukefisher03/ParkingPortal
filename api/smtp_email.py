@@ -19,6 +19,16 @@ def authenticate_smtp():
     if not creds.get("email") or not creds.get("password"):
         print("There is no credentials provided for the email client, email functionality will not work")
         return None
+    creds = {}
+    try:
+        with open("credentials.json", "r") as f:
+            creds = json.load(f)
+    except FileNotFoundError:
+        print("Credentials file for email client does not exist")
+
+    if not creds.get("email") or not creds.get("password"):
+        print("There is no credentials provided for the email client, email functionality will not work")
+        return None
     email, password = creds.get("email"), creds.get("password")
     context = ssl.create_default_context()
     server = smtplib.SMTP(SMTP_SERVER, SMTP_PORT)
