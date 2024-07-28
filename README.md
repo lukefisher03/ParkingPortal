@@ -49,6 +49,7 @@ If you do have an email account with an SMTP client then provide it in a file na
 
 Note: If you're using outlook you will need to enable two factor authentication and set up an [application password](https://support.microsoft.com/en-us/account-billing/how-to-get-and-use-app-passwords-5896ed9b-4263-e681-128a-a6f2979a7944). 
 
+
 # UI screenshots
 ![Screenshot of dashboard page](assets/Dashboard.png)
 ![Screenshot of dashboard page](assets/Login.png)
