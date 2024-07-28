@@ -32,8 +32,8 @@ def send_notification_emails(vehicles_to_notify, to):
     to: str
     """
     try:
-        with authenticate_smtp() as server:
-            for vehicle in vehicles_to_notify:
+        for vehicle in vehicles_to_notify:
+            with authenticate_smtp() as server:
                 email_body = NotificationEmail(vehicle)
                 mime_text = MIMEText(email_body.build_email())
                 mime_text["Subject"] = f"CITATION ALERT for {vehicle.get("plate")}"

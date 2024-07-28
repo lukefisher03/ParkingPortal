@@ -47,9 +47,9 @@ def testAuthentication():
         print("Something happened with the second sign up test")
     
     try:
-        login_response = requests.post("http://localhost:8000/accounts/login/", data=json.dumps(login))
+        login_response = requests.post("http://localhost:8000/accounts/login/", data=json.dumps({"email":"lukedavidfisher03@gmail.com", "password": "wrong password"}))
         if login_response < 300:
-            results += f"Login authentication failed\n"
+            results += f"Login with incorrect credentials worked, server is not checking password\n"
         else:
             results += f"Server successfully rejects incorrect login\n"
     except:
