@@ -17,7 +17,7 @@ app.add_middleware(
     CORSMiddleware,
     allow_origins=origins,
     allow_credentials=True,
-    allow_methods=["GET", "POST"],
+    allow_methods=["GET", "POST"], 
 )
 
 VEHICLE_KINDS = ["suv", "sedan", "truck", "van"]
@@ -214,7 +214,7 @@ def add_vehicle(vehicle: Vehicle, response: Response):
             con.execute("INSERT INTO vehicles VALUES(?, ?, ?, ?, ?, ?, ?)", params)
             response.status_code = status.HTTP_200_OK
             return
-    except sqlite3.IntegrityError as e:
+    except sqlite3.IntegrityError:
         response.status_code = status.HTTP_409_CONFLICT
         return
     except Exception:
@@ -340,7 +340,7 @@ def manageNotifications(response: Response):
 
 
 @app.get("/api/getVehicle/")
-def getVehicle(plate: str, user_id: str, response: Response):
+def getVehicle(plate: str, response: Response):
     con = sqlite3.connect(DATABASE)
 
     with con:
@@ -348,7 +348,7 @@ def getVehicle(plate: str, user_id: str, response: Response):
             "SELECT * FROM vehicles WHERE plate=? AND user_id=?",
             (
                 plate,
-                user_id,
+                session["user_id"],
             ),
         )
 
