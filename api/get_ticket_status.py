@@ -64,6 +64,7 @@ def getVehicleInfoByPlate(plate, session_info, test=False):
         "__RequestVerificationToken": session_info[1],
         "Type": "PlateStrict",
         "Term": plate,
+        "AdditionalTerm": "OH"
     }
 
     get_plate_data = session_info[0].post(
